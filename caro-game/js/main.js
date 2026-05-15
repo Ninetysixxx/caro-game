@@ -4,7 +4,7 @@ import { createState, makeMove, undoMove, PLAYER_X, PLAYER_O } from './game.js';
 import { getBestMove } from './ai.js';
 import {
   initBoard, setCellClickHandler, renderBoard,
-  highlightLastMove, drawWinLine, clearWinLine,
+  highlightLastMove, clearLastMove, drawWinLine, clearWinLine,
   updateStatus, disableBoard, enableBoard,
 } from './ui.js';
 
@@ -69,13 +69,15 @@ function bumpScore(winner) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function syncUndoBtn() {
-  document.getElementById('btn-undo').disabled = state.history.length === 0;
+  const btn = document.getElementById('btn-undo');
+  btn.disabled = state.history.length === 0 || state.status !== 'playing' || aiThinking;
 }
 
 function resetBoard() {
   state = createState();
   renderBoard(state);
   clearWinLine();
+  clearLastMove();
   enableBoard();
   updateStatus('Lượt: X');
   syncUndoBtn();
@@ -116,8 +118,8 @@ function triggerAiTurn() {
     highlightLastMove(move.row, move.col);
     handlePostMove(true);
     if (state.status === 'playing') enableBoard();
-    syncUndoBtn();
     aiThinking = false;
+    syncUndoBtn();
   }, 200);
 }
 
@@ -134,10 +136,15 @@ function onCellClick(row, col) {
 
 function onUndoClick() {
   if (aiThinking || state.history.length === 0) return;
+  if (state.status !== 'playing') return; // No undo after game ends
   undoMove(state);
   if (mode === 'ai' && state.history.length > 0) undoMove(state);
   renderBoard(state);
   clearWinLine();
+  // Re-highlight the new "last move" (if any) so the previous yellow ring clears.
+  const last = state.history[state.history.length - 1];
+  if (last) highlightLastMove(last.row, last.col);
+  else clearLastMove();
   enableBoard();
   updateStatus(`Lượt: ${state.currentPlayer}`);
   syncUndoBtn();
@@ -156,7 +163,9 @@ function onModeChange(newMode) {
   cancelAiTurn();
   mode = newMode;
   document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.classList.toggle('is-active', btn.dataset.mode === mode);
+    const active = btn.dataset.mode === mode;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
   });
   updateScoreDisplay();
   resetBoard();

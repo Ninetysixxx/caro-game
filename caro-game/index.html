@@ -11,10 +11,10 @@
   <header class="app-header">
     <h1 class="app-title">Cờ Caro</h1>
     <div class="mode-toggle" role="group" aria-label="Chế độ chơi">
-      <button type="button" class="mode-btn is-active" data-mode="hotseat">2 người</button>
-      <button type="button" class="mode-btn" data-mode="ai">Vs Máy</button>
+      <button type="button" class="mode-btn is-active" data-mode="hotseat" aria-pressed="true">2 người</button>
+      <button type="button" class="mode-btn" data-mode="ai" aria-pressed="false">Vs Máy</button>
     </div>
-    <div class="score-panel" aria-live="polite">
+    <div class="score-panel" aria-live="polite" aria-label="Điểm số">
       <span class="score score-x"><span class="score-label">X</span><span class="score-value" id="score-x">0</span></span>
       <span class="score score-o"><span class="score-label">O</span><span class="score-value" id="score-o">0</span></span>
       <span class="score score-draws"><span class="score-label">Hòa</span><span class="score-value" id="score-draws">0</span></span>
@@ -22,15 +22,15 @@
   </header>
 
   <main class="app-main">
-    <div class="status-bar" id="status-bar" aria-live="polite">Lượt: X</div>
+    <div class="status-bar" id="status-bar" role="status" aria-live="polite">Lượt: X</div>
     <div class="board-wrapper">
       <div class="board-grid" id="board" role="grid" aria-label="Bàn cờ caro 20x20"></div>
     </div>
   </main>
 
   <footer class="app-footer">
-    <button type="button" class="ctrl-btn" id="btn-undo">Undo</button>
-    <button type="button" class="ctrl-btn" id="btn-restart">Restart</button>
+    <button type="button" class="ctrl-btn" id="btn-undo" aria-label="Hoàn tác nước đi cuối">Undo</button>
+    <button type="button" class="ctrl-btn" id="btn-restart" aria-label="Chơi lại từ đầu">Restart</button>
   </footer>
 
   <script type="module" src="js/main.js"></script>

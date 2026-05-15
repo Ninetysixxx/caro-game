@@ -19,6 +19,9 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 @media (max-width: 640px) {
   :root { --cell-size: 24px; } /* touch target ≥24px; board scrolls in wrapper */
 }
+@media (max-width: 360px) {
+  :root { --cell-size: 20px; }
+}
 
 /* ===== Layout ===== */
 html, body { height: 100%; }
@@ -48,8 +51,11 @@ body {
 .app-title { font-size: 1.5rem; font-weight: 700; }
 
 .mode-toggle { display: inline-flex; background: var(--surface); border-radius: 8px; overflow: hidden; }
-.mode-btn { padding: 6px 14px; color: var(--text-muted); font-size: 0.9rem; }
+.mode-btn { padding: 6px 14px; color: var(--text-muted); font-size: 0.9rem; transition: background 0.15s, color 0.15s; }
+.mode-btn:hover { color: var(--text); }
 .mode-btn.is-active { background: var(--x); color: #fff; }
+.mode-btn:focus-visible,
+.ctrl-btn:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
 
 .score-panel { display: inline-flex; gap: 12px; }
 .score { display: inline-flex; gap: 6px; padding: 4px 10px; background: var(--surface); border-radius: 6px; font-size: 0.95rem; }
@@ -99,6 +105,19 @@ body {
 }
 
 .cell:hover { background: color-mix(in srgb, var(--board) 92%, #000 8%); }
+.cell:focus-visible { outline: 2px solid var(--highlight); outline-offset: -2px; }
+
+@keyframes piece-pop {
+  0%   { transform: scale(0.2); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.cell.x::after,
+.cell.o::after {
+  display: inline-block;
+  animation: piece-pop 0.2s ease-out;
+}
 
 .cell.x::after {
   content: 'X';
@@ -126,11 +145,23 @@ body {
 
 .win-overlay.is-visible { display: block; }
 
+@keyframes win-draw {
+  from { stroke-dashoffset: var(--win-len, 1000); }
+  to   { stroke-dashoffset: 0; }
+}
+
 .win-line {
   stroke: var(--highlight);
   stroke-width: 4;
   stroke-linecap: round;
   opacity: 0.9;
+  stroke-dasharray: var(--win-len, 1000);
+  animation: win-draw 0.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell.x::after, .cell.o::after,
+  .win-line, .mode-btn, .ctrl-btn { animation: none; transition: none; }
 }
 
 /* ===== Controls ===== */

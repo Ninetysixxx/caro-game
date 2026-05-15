@@ -91,12 +91,18 @@ export function renderBoard(state) {
 
 export function highlightLastMove(row, col) {
   if (_lastMoveEl) _lastMoveEl.classList.remove('last-move');
-  if (!_container) return;
+  _lastMoveEl = null;
+  if (!_container || row == null || col == null) return;
   const cell = _container.querySelector(`[data-row="${row}"][data-col="${col}"]`);
   if (cell) {
     cell.classList.add('last-move');
     _lastMoveEl = cell;
   }
+}
+
+export function clearLastMove() {
+  if (_lastMoveEl) _lastMoveEl.classList.remove('last-move');
+  _lastMoveEl = null;
 }
 
 // ── Win line SVG ──────────────────────────────────────────────────────────────
@@ -125,6 +131,8 @@ export function drawWinLine(winLine) {
   line.setAttribute('y1', y1);
   line.setAttribute('x2', x2);
   line.setAttribute('y2', y2);
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  line.style.setProperty('--win-len', len.toFixed(1));
   line.classList.add('win-line');
   _svgEl.appendChild(line);
   _svgEl.classList.add('is-visible');
