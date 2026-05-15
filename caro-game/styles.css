@@ -6,18 +6,18 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 :root {
   --bg: #1e1e2e;
   --surface: #2a2a3d;
-  --board: #f4e4bc;
+  --board: #f9efd8;
   --line: #8b6f47;
-  --x: #d64545;
-  --o: #2c7be5;
-  --highlight: #ffd93d;
+  --x: #d63031;
+  --o: #0984e3;
+  --highlight: #fdcb6e;
   --text: #ececf1;
   --text-muted: #a0a0b0;
   --cell-size: 28px;
 }
 
 @media (max-width: 640px) {
-  :root { --cell-size: 18px; }
+  :root { --cell-size: 24px; } /* touch target ≥24px; board scrolls in wrapper */
 }
 
 /* ===== Layout ===== */
@@ -58,27 +58,78 @@ body {
 
 /* ===== Main ===== */
 .app-main { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.status-bar { font-size: 1rem; color: var(--text-muted); }
-.board-wrapper { overflow: auto; max-width: 100%; padding: 4px; }
+.status-bar { font-size: 1rem; color: var(--text-muted); min-height: 1.4em; }
 
+/* ===== Board wrapper ===== */
+.board-wrapper {
+  overflow: auto;
+  max-width: 100%;
+  padding: 4px;
+  position: relative; /* anchor for SVG overlay */
+}
+
+/* ===== Board grid ===== */
 .board-grid {
   display: grid;
   grid-template-columns: repeat(20, var(--cell-size));
   grid-template-rows: repeat(20, var(--cell-size));
-  background: var(--board);
+  background: var(--line);
+  gap: 1px;
   border: 2px solid var(--line);
+  position: relative;
 }
 
-/* Placeholder cell visualization for Phase 1 verification */
-.board-grid::before {
-  content: "";
-  grid-column: 1 / -1;
-  grid-row: 1 / -1;
-  background-image:
-    linear-gradient(to right, var(--line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
-  background-size: var(--cell-size) var(--cell-size);
-  opacity: 0.4;
+.board-grid.disabled { pointer-events: none; }
+
+/* ===== Cells ===== */
+.cell {
+  background: var(--board);
+  cursor: pointer;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--cell-size) * 0.6);
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+  touch-action: manipulation;
+  transition: background 0.08s;
+}
+
+.cell:hover { background: color-mix(in srgb, var(--board) 92%, #000 8%); }
+
+.cell.x::after {
+  content: 'X';
+  color: var(--x);
+}
+
+.cell.o::after {
+  content: 'O';
+  color: var(--o);
+}
+
+.cell.last-move {
+  box-shadow: inset 0 0 0 2px var(--highlight);
+}
+
+/* ===== Win line SVG overlay ===== */
+.win-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  display: none;
+  overflow: visible;
+}
+
+.win-overlay.is-visible { display: block; }
+
+.win-line {
+  stroke: var(--highlight);
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.9;
 }
 
 /* ===== Controls ===== */

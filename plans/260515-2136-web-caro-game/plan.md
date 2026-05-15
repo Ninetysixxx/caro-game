@@ -47,8 +47,8 @@ Mỗi file <200 lines (per dev rules).
 |---|---|---|---|
 | 1 | [Setup scaffold](phase-01-setup-scaffold.md) | 1h | complete |
 | 2 | [Game core](phase-02-game-core.md) | 3h | complete |
-| 3 | [UI rendering](phase-03-ui-rendering.md) | 3h | pending |
-| 4 | [AI heuristic](phase-04-ai-heuristic.md) | 4h | pending |
+| 3 | [UI rendering](phase-03-ui-rendering.md) | 3h | complete |
+| 4 | [AI heuristic](phase-04-ai-heuristic.md) | 4h | complete |
 | 5 | [Features integration](phase-05-features-integration.md) | 2h | pending |
 | 6 | [Polish & deploy](phase-06-polish-deploy.md) | 2h | pending |
 
