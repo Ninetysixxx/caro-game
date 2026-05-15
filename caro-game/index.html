@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1e1e2e" />
+  <title>Cờ Caro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">Cờ Caro</h1>
+    <div class="mode-toggle" role="group" aria-label="Chế độ chơi">
+      <button type="button" class="mode-btn is-active" data-mode="hotseat">2 người</button>
+      <button type="button" class="mode-btn" data-mode="ai">Vs Máy</button>
+    </div>
+    <div class="score-panel" aria-live="polite">
+      <span class="score score-x"><span class="score-label">X</span><span class="score-value" id="score-x">0</span></span>
+      <span class="score score-o"><span class="score-label">O</span><span class="score-value" id="score-o">0</span></span>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="status-bar" id="status-bar" aria-live="polite">Lượt: X</div>
+    <div class="board-wrapper">
+      <div class="board-grid" id="board" role="grid" aria-label="Bàn cờ caro 20x20"></div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <button type="button" class="ctrl-btn" id="btn-undo">Undo</button>
+    <button type="button" class="ctrl-btn" id="btn-restart">Restart</button>
+  </footer>
+
+  <script type="module" src="js/game.js"></script>
+  <script type="module" src="js/ai.js"></script>
+  <script type="module" src="js/ui.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
