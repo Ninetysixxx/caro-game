@@ -55,6 +55,7 @@ body {
 .score { display: inline-flex; gap: 6px; padding: 4px 10px; background: var(--surface); border-radius: 6px; font-size: 0.95rem; }
 .score-x .score-label { color: var(--x); font-weight: 700; }
 .score-o .score-label { color: var(--o); font-weight: 700; }
+.score-draws .score-label { color: var(--text-muted); font-weight: 700; }
 
 /* ===== Main ===== */
 .app-main { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -142,3 +143,4 @@ body {
 }
 .ctrl-btn:hover { background: #3a3a4d; }
 .ctrl-btn:active { transform: translateY(1px); }
+.ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
