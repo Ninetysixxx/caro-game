@@ -6,9 +6,10 @@ Vanilla JS implementation của cờ caro Việt Nam: board 20×20, win = 5 liê
 
 ## Features
 
-- 3 chế độ:
+- 4 chế độ:
   - **Hot-seat** (2 ngườii)
   - **vs AI** (heuristic, <500ms/lượt)
+  - **Online** — real-time 2-player qua WebSocket (Cloudflare Workers + Durable Objects)
   - **Hôm nay** — Daily Puzzle Mode: 5 starter puzzles với mục tiêu win-in-N / block-in-N
 - Undo nước đi (trước khi game kết thúc)
 - Score tracking persist qua reload (localStorage)
@@ -22,7 +23,7 @@ Vanilla JS implementation của cờ caro Việt Nam: board 20×20, win = 5 liê
 ## Tech
 
 - Vanilla JS (ES modules), HTML5, CSS3
-- No framework, no backend, no build step
+- No framework, no build step for the client; backend is Cloudflare Workers for Online mode
 - localStorage cho score persistence
 - Deploy target: GitHub Pages
 
@@ -44,7 +45,9 @@ caro-game/
 │   ├── streak.js        # Streak tracking (localStorage)
 │   ├── share.js         # Share controller (Web Share API + clipboard)
 │   ├── share-formatter.js # Emoji/text formatters for share output
-│   └── board-snapshot.js  # Canvas-based board screenshot for OG/share
+│   ├── board-snapshot.js  # Canvas-based board screenshot for OG/share
+│   ├── multiplayer-client.js # WebSocket client for Online mode
+│   └── room-ui.js       # Room create/join modals for Online mode
 ├── test-daily.mjs       # Node test runner for puzzle engine
 └── README.md
 ```
@@ -81,6 +84,14 @@ URL sẽ là `https://<username>.github.io/caro-game/`.
 - Win: 5 quân liên tiếp (ngang/dọc/chéo)
 - **Chặn 2 đầu**: nếu cả hai đầu của dãy 5 bị đối thủ chặn (hoặc cạnh bàn) → **không tính thắng**
 - Long-line (6+): tính thắng
+
+## Online Multiplayer Mode
+
+- **Tạo phòng**: click "Online → Tạo phòng", sao chép mã 4 ký tự và gửi cho bạn bè
+- **Vào phòng**: click "Online → Vào phòng", nhập mã phòng
+- **Real-time**: mỗi nước đi đồng bộ ngay lập tức qua WebSocket
+- **Backend**: Cloudflare Workers + Durable Objects (xem `caro-server/README.md` để deploy)
+- Cần cấu hình `CARO_SERVER_URL` trong `js/main.js` trỏ đến Worker URL của bạn
 
 ## Daily Puzzle Mode
 
