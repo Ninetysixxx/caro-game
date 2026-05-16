@@ -33,26 +33,45 @@ Vanilla JS implementation của cờ caro Việt Nam: board 20×20, win = 5 liê
 caro-game/
 ├── index.html
 ├── styles.css
-├── og-image.png         # Open Graph default image
-├── js/
-│   ├── game.js          # State, rules, win detection (caro VN)
-│   ├── ai.js            # Heuristic pattern scoring
-│   ├── ui.js            # Render + event delegation
-│   ├── main.js          # Bootstrap, mode toggle, scores
-│   ├── puzzle-bank.js   # Daily puzzle definitions (5 starters)
-│   ├── puzzle-engine.js # Puzzle validation: win-in-N / block-in-N
-│   ├── puzzle-ui.js     # Puzzle board UI + modal flow
-│   ├── streak.js        # Streak tracking (localStorage)
-│   ├── share.js         # Share controller (Web Share API + clipboard)
-│   ├── share-formatter.js # Emoji/text formatters for share output
-│   ├── board-snapshot.js  # Canvas-based board screenshot for OG/share
-│   ├── multiplayer-client.js # WebSocket client for Online mode
-│   └── room-ui.js       # Room create/join modals for Online mode
-├── test-daily.mjs       # Node test runner for puzzle engine
-└── README.md
+├── manifest.json
+├── og-image.png
+├── sw.js                       # service worker (offline cache)
+├── icons/
+├── vendor/                     # gif.js + worker (replay GIF fallback)
+└── js/
+    ├── game.js                 # rules, win detection
+    ├── ui.js                   # DOM render + event delegation
+    ├── main.js                 # bootstrap + event router (<200 LOC)
+    ├── score-store.js          # score persistence + display + stats bridge
+    ├── gameover-modal.js       # end-of-game dialog
+    ├── ai.js                   # pattern scoring
+    ├── ai-easy.js
+    ├── ai-medium.js
+    ├── ai-hard.js
+    ├── ai-strategy.js          # difficulty dispatcher
+    ├── ai-turn-controller.js   # shared AI-move scheduler
+    ├── puzzle-bank.js
+    ├── puzzle-engine.js
+    ├── puzzle-ui.js
+    ├── daily-controller.js     # daily-puzzle lifecycle
+    ├── streak.js
+    ├── stats.js
+    ├── stats-ui.js
+    ├── achievements.js
+    ├── share.js
+    ├── share-formatter.js
+    ├── board-snapshot.js
+    ├── replay-renderer.js
+    ├── replay-encoder.js       # MP4 (MediaRecorder) + GIF fallback
+    ├── replay-ui.js
+    ├── multiplayer-client.js   # WebSocket client + token persistence
+    ├── multiplayer-controller.js  # multiplayer setup + state sync
+    ├── room-ui.js              # create/join/config-missing modals
+    ├── sw-register.js
+    └── test-daily.mjs          # node test runner
 ```
 
-Mỗi file <200 dòng (theo dev rules).
+Mỗi file <200 dòng (theo dev rules). Ngoại lệ đã chấp nhận: `stats-ui.js` (208).
 
 ## Run Locally
 
@@ -64,9 +83,14 @@ python3 -m http.server 8000
 
 # hoặc Node
 npx serve .
+
+# Run puzzle test suite
+node js/test-daily.mjs
 ```
 
 Mở `http://localhost:8000` (port hiển thị bởi `serve`).
+
+Online mode cần `window.CARO_SERVER_URL` trỏ đến Worker URL — set trong `index.html` trước khi nạp `main.js`, hoặc edit `js/main.js`.
 
 ## Deploy lên GitHub Pages
 
