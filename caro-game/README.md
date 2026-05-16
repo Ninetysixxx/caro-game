@@ -14,6 +14,7 @@ Vanilla JS implementation của cờ caro Việt Nam: board 20×20, win = 5 liê
 - Score tracking persist qua reload (localStorage)
 - **Streak tracking** (localStorage) cho Daily Puzzle Mode
 - **Emoji share grid** — chia sẻ kết quả puzzle dạng emoji grid
+- **Share card + OG meta** — snapshot bàn cờ và Open Graph meta tags cho link preview
 - Highlight nước cuối + vẽ đường thắng (SVG animated)
 - Responsive 320px → desktop
 - Accessibility: ARIA labels, `aria-pressed`, `prefers-reduced-motion`
@@ -31,6 +32,7 @@ Vanilla JS implementation của cờ caro Việt Nam: board 20×20, win = 5 liê
 caro-game/
 ├── index.html
 ├── styles.css
+├── og-image.png         # Open Graph default image
 ├── js/
 │   ├── game.js          # State, rules, win detection (caro VN)
 │   ├── ai.js            # Heuristic pattern scoring
@@ -39,7 +41,10 @@ caro-game/
 │   ├── puzzle-bank.js   # Daily puzzle definitions (5 starters)
 │   ├── puzzle-engine.js # Puzzle validation: win-in-N / block-in-N
 │   ├── puzzle-ui.js     # Puzzle board UI + modal flow
-│   └── streak.js        # Streak tracking (localStorage)
+│   ├── streak.js        # Streak tracking (localStorage)
+│   ├── share.js         # Share controller (Web Share API + clipboard)
+│   ├── share-formatter.js # Emoji/text formatters for share output
+│   └── board-snapshot.js  # Canvas-based board screenshot for OG/share
 ├── test-daily.mjs       # Node test runner for puzzle engine
 └── README.md
 ```

@@ -1,6 +1,7 @@
 // puzzle-ui.js — daily mode UI: goal banner, attempt dots, result modal, streak display
 
-import { formatGoal, gradeMove } from './puzzle-engine.js';
+import { formatGoal } from './puzzle-engine.js';
+import { shareContent, showToast, showManualCopy } from './share.js';
 
 let _bannerEl = null;
 let _dotsEl = null;
@@ -92,13 +93,16 @@ export function showResultModal(result, puzzle, streak, moveGrades, actualMoveCo
   if (closeBtn) closeBtn.focus();
 
   closeBtn.addEventListener('click', hideResultModal);
-  shareBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(shareText).catch(() => {});
-    if (navigator.share) {
-      navigator.share({ text: shareText }).catch(() => {});
+  shareBtn.addEventListener('click', async () => {
+    const url = `${location.origin}${location.pathname}?ref=share`;
+    const result = await shareContent({ title: 'Cờ Caro VN', text: shareText, url });
+    if (result.ok && result.method === 'clipboard') {
+      showToast('Đã copy link!');
+      shareBtn.textContent = 'Đã sao chép!';
+      setTimeout(() => { shareBtn.textContent = 'Chia sẻ'; }, 1500);
+    } else if (!result.ok && result.method === 'manual') {
+      showManualCopy(result.text);
     }
-    shareBtn.textContent = 'Đã sao chép!';
-    setTimeout(() => { shareBtn.textContent = 'Chia sẻ'; }, 1500);
   });
 
   // Close on backdrop click
@@ -121,7 +125,7 @@ function _onEsc(e) {
 
 /** Build the shareable text with emoji grid. */
 export function buildShareText(puzzleNumber, won, moveGrades, scoreLabel) {
-  return `Cờ Caro #${puzzleNumber} — ${scoreLabel}\n${moveGrades.join('')}\n#CaroVN\ncaro.app`;
+  return `Cờ Caro #${puzzleNumber} — ${scoreLabel}\n${moveGrades.join('')}\n#CaroVN`;
 }
 
 // ── Streak Display (header) ────────────────────────────────────────────────────

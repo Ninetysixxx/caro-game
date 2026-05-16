@@ -13,6 +13,9 @@ import {
   initDailyBanner, removeDailyBanner, updateAttempts,
   showResultModal, hideResultModal, updateStreakDisplay, initStreakDisplay
 } from './puzzle-ui.js';
+import { shareContent, showToast, showManualCopy } from './share.js';
+import { formatWinResult, formatInviteText } from './share-formatter.js';
+import { snapshotBoard, downloadBlob } from './board-snapshot.js';
 
 // ── Module-scoped state ───────────────────────────────────────────────────────
 
@@ -96,6 +99,7 @@ function syncUndoBtn() {
 }
 
 function resetBoard() {
+  hideGameOverModal();
   state = createState();
   renderBoard(state);
   clearWinLine();
@@ -149,6 +153,80 @@ function endDailyPuzzle(result) {
   showResultModal(result, dailyPuzzle, streak, displayGrades, dailyUserMoveCount, getTodayPuzzleNumber());
 }
 
+let _gameoverModal = null;
+
+function hideGameOverModal() {
+  if (_gameoverModal) {
+    _gameoverModal.remove();
+    _gameoverModal = null;
+  }
+  document.removeEventListener('keydown', _onEscGameOver);
+}
+
+function showGameOverModal() {
+  hideGameOverModal();
+  const isDraw = state.status === 'draw';
+  const title = isDraw ? 'Hòa!' : `${state.winner} thắng!`;
+  const moves = state.history.length;
+  const shareText = formatWinResult({ mode, winner: state.winner, moves });
+  const url = `${location.origin}${location.pathname}?ref=share`;
+
+  _gameoverModal = document.createElement('div');
+  _gameoverModal.className = 'puzzle-modal';
+  _gameoverModal.setAttribute('role', 'dialog');
+  _gameoverModal.setAttribute('aria-modal', 'true');
+  _gameoverModal.setAttribute('aria-label', 'Kết thúc ván');
+  _gameoverModal.innerHTML = `
+    <div class="puzzle-modal-backdrop"></div>
+    <div class="puzzle-modal-panel">
+      <h2 class="puzzle-modal-title">${title}</h2>
+      <p class="puzzle-modal-subtitle">${moves} nước đã đi</p>
+      <div class="puzzle-modal-actions">
+        <button type="button" class="ctrl-btn" id="go-share-btn" aria-label="Chia sẻ kết quả">Chia sẻ</button>
+        <button type="button" class="ctrl-btn" id="go-save-btn" aria-label="Lưu ảnh ván cờ">Lưu ảnh</button>
+        <button type="button" class="ctrl-btn" id="go-close-btn" aria-label="Đóng">Đóng</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(_gameoverModal);
+
+  const closeBtn = _gameoverModal.querySelector('#go-close-btn');
+  const shareBtn = _gameoverModal.querySelector('#go-share-btn');
+  const saveBtn = _gameoverModal.querySelector('#go-save-btn');
+  closeBtn.focus();
+
+  closeBtn.addEventListener('click', hideGameOverModal);
+  _gameoverModal.querySelector('.puzzle-modal-backdrop').addEventListener('click', hideGameOverModal);
+
+  shareBtn.addEventListener('click', async () => {
+    const result = await shareContent({ title: 'Cờ Caro VN', text: shareText, url });
+    if (result.ok && result.method === 'clipboard') {
+      showToast('Đã copy link!');
+      shareBtn.textContent = 'Đã sao chép!';
+      setTimeout(() => { shareBtn.textContent = 'Chia sẻ'; }, 1500);
+    } else if (!result.ok && result.method === 'manual') {
+      showManualCopy(result.text);
+    }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    try {
+      const blob = await snapshotBoard(state, { cellSize: 24 });
+      const filename = `caro-van-${Date.now()}.png`;
+      downloadBlob(blob, filename);
+      showToast('Đã lưu ảnh!');
+    } catch (e) {
+      showToast('Lỗi khi lưu ảnh');
+    }
+  });
+
+  document.addEventListener('keydown', _onEscGameOver);
+}
+
+function _onEscGameOver(e) {
+  if (e.key === 'Escape') hideGameOverModal();
+}
+
 function triggerDailyAiTurn() {
   aiThinking = true;
   disableBoard();
@@ -182,10 +260,12 @@ function handlePostMove(fromAi) {
     updateStatus(`${state.winner} thắng!`);
     bumpScore(state.winner);
     disableBoard();
+    showGameOverModal();
   } else if (state.status === 'draw') {
     updateStatus('Hòa!');
     bumpScore(null);
     disableBoard();
+    showGameOverModal();
   } else {
     updateStatus(`Lượt: ${state.currentPlayer}`);
     if (!fromAi && mode === 'ai' && state.currentPlayer === PLAYER_O) {
@@ -281,6 +361,7 @@ function onModeChange(newMode) {
     if (!confirm('Đổi chế độ sẽ kết thúc ván hiện tại. Tiếp tục?')) return;
   }
   cancelAiTurn();
+  hideGameOverModal();
   mode = newMode;
   document.querySelectorAll('.mode-btn').forEach(btn => {
     const active = btn.dataset.mode === mode;
@@ -324,6 +405,20 @@ function bootstrap() {
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => onModeChange(btn.dataset.mode));
   });
+
+  const headerShare = document.getElementById('btn-share-header');
+  if (headerShare) {
+    headerShare.addEventListener('click', async () => {
+      const url = `${location.origin}${location.pathname}?ref=share`;
+      const text = formatInviteText();
+      const result = await shareContent({ title: 'Cờ Caro VN', text, url });
+      if (result.ok && result.method === 'clipboard') {
+        showToast('Đã copy link!');
+      } else if (!result.ok && result.method === 'manual') {
+        showManualCopy(result.text);
+      }
+    });
+  }
 }
 
 if (document.readyState === 'loading') {

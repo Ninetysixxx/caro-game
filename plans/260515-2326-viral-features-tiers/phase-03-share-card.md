@@ -3,7 +3,7 @@ phase: 3
 title: Share Card + OG Meta
 tier: S
 effort: 3h
-status: planned
+status: complete
 depends_on: [2]
 ---
 
@@ -153,19 +153,19 @@ caro-game/
 
 ## Todo List
 
-- [ ] Design + export og-image.png (1200×630)
-- [ ] Add OG/Twitter meta to `index.html`
-- [ ] Write `share.js` (native + fallback)
-- [ ] Write `share-formatter.js` (puzzle + game text)
-- [ ] Write `board-snapshot.js` (canvas → PNG blob)
-- [ ] Hook share button into daily result modal
-- [ ] Build win-game modal cho mode thường
-- [ ] Styling: share button, toast notification
-- [ ] Update `sw.js` APP_SHELL
-- [ ] Test FB preview (paste link)
-- [ ] Test Zalo preview
-- [ ] Test Twitter card validator (cards-dev.twitter.com)
-- [ ] Test mobile share sheet iOS + Android
+- [x] Design + export og-image.png (1200×630)
+- [x] Add OG/Twitter meta to `index.html`
+- [x] Write `share.js` (native + fallback)
+- [x] Write `share-formatter.js` (puzzle + game text)
+- [x] Write `board-snapshot.js` (canvas → PNG blob)
+- [x] Hook share button into daily result modal
+- [x] Build win-game modal cho mode thường
+- [x] Styling: share button, toast notification
+- [x] Update `sw.js` APP_SHELL
+- [x] Test FB preview (paste link)
+- [x] Test Zalo preview
+- [x] Test Twitter card validator (cards-dev.twitter.com)
+- [x] Test mobile share sheet iOS + Android
 
 ## Success Criteria
 
