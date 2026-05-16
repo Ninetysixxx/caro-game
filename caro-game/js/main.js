@@ -1,7 +1,7 @@
 // main.js — bootstrap, event wiring, mode toggle, score tracking, daily puzzle
 
 import { createState, makeMove, undoMove, PLAYER_X, PLAYER_O } from './game.js';
-import { getBestMove } from './ai.js';
+import { pickByLevel } from './ai-strategy.js';
 import {
   initBoard, setCellClickHandler, renderBoard,
   highlightLastMove, clearLastMove, drawWinLine, clearWinLine,
@@ -23,6 +23,8 @@ import { toggleStatsModal } from './stats-ui.js';
 
 let state = createState();
 let mode = 'hotseat'; // 'hotseat' | 'ai' | 'daily'
+const DIFF_KEY = 'caro-ai-difficulty-v1';
+let aiLevel = localStorage.getItem(DIFF_KEY) || 'medium';
 let scores = loadScores();
 let aiThinking = false;
 let aiTimer = null;
@@ -138,6 +140,12 @@ function syncUndoBtn() {
 }
 
 
+
+function levelLabel(level) {
+  if (level === 'easy') return 'Dễ';
+  if (level === 'hard') return 'Khó';
+  return 'Vừa';
+}
 
 function resetBoard() {
   hideGameOverModal();
@@ -324,10 +332,10 @@ function handlePostMove(fromAi) {
 function triggerAiTurn() {
   aiThinking = true;
   disableBoard();
-  updateStatus('AI đang nghĩ...');
+  updateStatus(`AI ${levelLabel(aiLevel)} đang nghĩ...`);
   aiTimer = setTimeout(() => {
     aiTimer = null;
-    const move = getBestMove(state.board, PLAYER_O);
+    const move = pickByLevel(state.board, PLAYER_O, aiLevel, state.size);
     if (!move) { aiThinking = false; enableBoard(); return; }
     makeMove(state, move.row, move.col);
     renderBoard(state);
@@ -400,6 +408,26 @@ function onRestartClick() {
   }
 }
 
+function syncDifficultyUI() {
+  document.querySelectorAll('.difficulty-btn').forEach(btn => {
+    const active = btn.dataset.level === aiLevel;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function onDifficultyChange(newLevel) {
+  if (newLevel === aiLevel) return;
+  if (state.history.length > 0 || aiThinking) {
+    if (!confirm('Đổi độ khó sẽ kết thúc ván hiện tại. Tiếp tục?')) return;
+  }
+  cancelAiTurn();
+  aiLevel = newLevel;
+  try { localStorage.setItem(DIFF_KEY, aiLevel); } catch { /* quota/private */ }
+  syncDifficultyUI();
+  onRestartClick();
+}
+
 function onModeChange(newMode) {
   if (newMode === mode) return;
   if (state.history.length > 0 || aiThinking) {
@@ -413,6 +441,11 @@ function onModeChange(newMode) {
     btn.classList.toggle('is-active', active);
     btn.setAttribute('aria-pressed', String(active));
   });
+
+  const diffSelector = document.getElementById('difficulty-selector');
+  if (diffSelector) {
+    diffSelector.classList.toggle('is-hidden', mode !== 'ai');
+  }
 
   if (mode !== 'daily') {
     removeDailyBanner();
@@ -440,6 +473,12 @@ function bootstrap() {
   updateStatus('Lượt: X');
   updateScoreDisplay();
   syncUndoBtn();
+  syncDifficultyUI();
+
+  const diffSelector = document.getElementById('difficulty-selector');
+  if (diffSelector) {
+    diffSelector.classList.toggle('is-hidden', mode !== 'ai');
+  }
 
   const streak = loadStreak();
   initStreakDisplay();
@@ -449,6 +488,10 @@ function bootstrap() {
   document.getElementById('btn-restart').addEventListener('click', onRestartClick);
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => onModeChange(btn.dataset.mode));
+  });
+
+  document.querySelectorAll('.difficulty-btn').forEach(btn => {
+    btn.addEventListener('click', () => onDifficultyChange(btn.dataset.level));
   });
 
   const headerShare = document.getElementById('btn-share-header');

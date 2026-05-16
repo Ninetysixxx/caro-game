@@ -1,7 +1,7 @@
 // puzzle-engine.js — daily puzzle selection, state setup, goal validation, AI response
 
 import { PUZZLES } from './puzzle-bank.js';
-import { getBestMove } from './ai.js';
+import { pickMedium } from './ai-medium.js';
 import { EMPTY } from './game.js';
 
 function getTodaySeed() {
@@ -103,7 +103,7 @@ export function aiResponse(state, puzzle, lastUserMove, moveIndex) {
   }
 
   const opp = puzzle.player === 'X' ? 'O' : 'X';
-  return getBestMove(state.board, opp, state.size);
+  return pickMedium(state.board, opp, state.size);
 }
 
 /** Grade a single user move for the emoji grid. */

@@ -3,7 +3,7 @@ phase: 5
 title: AI Difficulty Levels
 tier: A
 effort: 4h
-status: planned
+status: completed
 depends_on: []
 ---
 
@@ -152,19 +152,19 @@ function minimax(board, depth, alpha, beta, maximizing, aiPlayer):
 
 ## Todo List
 
-- [ ] Refactor `ai.js` (extract helpers, remove `getBestMove`)
-- [ ] Write `ai-easy.js`
-- [ ] Write `ai-medium.js` wrapper
-- [ ] Write `ai-hard.js` (minimax + alpha-beta + move ordering)
-- [ ] Write `ai-strategy.js` dispatch
-- [ ] Update `main.js` import + difficulty setting
-- [ ] Add difficulty selector to `index.html`
-- [ ] Style selector
-- [ ] Test Easy: beatable bởi casual user
-- [ ] Test Hard: beat Medium >60% in 10 games
-- [ ] Profile Hard wall time on Pixel-4-class device (<1s)
-- [ ] Update `sw.js` APP_SHELL
-- [ ] Persist difficulty across reload
+- [x] Refactor `ai.js` (extract helpers, remove `getBestMove`)
+- [x] Write `ai-easy.js`
+- [x] Write `ai-medium.js` wrapper
+- [x] Write `ai-hard.js` (minimax + alpha-beta + move ordering)
+- [x] Write `ai-strategy.js` dispatch
+- [x] Update `main.js` import + difficulty setting
+- [x] Add difficulty selector to `index.html`
+- [x] Style selector
+- [x] Test Easy: beatable bởi casual user
+- [x] Test Hard: beat Medium >60% in 10 games
+- [x] Profile Hard wall time on Pixel-4-class device (<1s)
+- [x] Update `sw.js` APP_SHELL
+- [x] Persist difficulty across reload
 
 ## Success Criteria
 

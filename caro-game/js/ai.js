@@ -13,7 +13,7 @@ const DIRECTIONS = [[0, 1], [1, 0], [1, 1], [1, -1]];
 const CENTER = Math.floor(BOARD_SIZE / 2); // 10 for 20x20
 
 // Build 9-char window: 4 before + center(p) + 4 after along (dr,dc).
-function extractLine(board, r, c, dr, dc, player, size = BOARD_SIZE) {
+export function extractLine(board, r, c, dr, dc, player, size = BOARD_SIZE) {
   const opp = getOpponent(player);
   const encode = (row, col) => {
     if (!isInBounds(row, col, size)) return 'b';
@@ -31,7 +31,7 @@ function extractLine(board, r, c, dr, dc, player, size = BOARD_SIZE) {
 // Score a single 9-char line for patterns. Scoring is intentionally additive
 // across tiers (e.g. `_pppp_` is open-4 AND substring `_ppp_` open-3 → 11000),
 // which biases toward critical cells — accepted per spec risk-list.
-function evaluateLine(line) {
+export function evaluateLine(line) {
   let score = 0;
 
   // Win: 5 own in a row
@@ -90,7 +90,7 @@ export function scoreCell(board, row, col, player, size = BOARD_SIZE) {
 
 // Collect empty cells within radius 2 of any placed stone.
 // Returns [] when board is full (caller must handle null move).
-function getCandidates(board, size = BOARD_SIZE) {
+export function getCandidates(board, size = BOARD_SIZE) {
   const seen = new Set();
   const result = [];
 
@@ -123,33 +123,4 @@ function getCandidates(board, size = BOARD_SIZE) {
   return [];
 }
 
-// Return best move for aiPlayer using offense+defense heuristic.
-export function getBestMove(board, aiPlayer, size = BOARD_SIZE) {
-  const t0 = Date.now();
-  const opp = getOpponent(aiPlayer);
-  const candidates = getCandidates(board, size);
-  if (candidates.length === 0) return null; // board full
 
-  let bestScore = -Infinity;
-  let bestMove = candidates[0];
-
-  for (const { row, col } of candidates) {
-    const off = scoreCell(board, row, col, aiPlayer, size);
-    const def = scoreCell(board, row, col, opp, size);
-    const total = off + def * 0.9;
-    if (total > bestScore) {
-      bestScore = total;
-      bestMove = { row, col };
-    }
-  }
-
-  // eslint-disable-next-line no-console
-  console.debug(`[AI] getBestMove: ${candidates.length} candidates, ${Date.now() - t0}ms`);
-  return bestMove;
-}
-
-// Back-compat adapter for main.js scaffold: pickMove(game) → {row, col}
-export function pickMove(game) {
-  if (!game || !game.board || !game.currentPlayer) return null;
-  return getBestMove(game.board, game.currentPlayer, game.size || BOARD_SIZE);
-}

@@ -36,6 +36,11 @@
       <button type="button" class="mode-btn" data-mode="ai" aria-pressed="false">Vs Máy</button>
       <button type="button" class="mode-btn" data-mode="daily" aria-pressed="false">Hôm nay</button>
     </div>
+    <div class="difficulty-selector is-hidden" id="difficulty-selector" role="group" aria-label="Độ khó AI">
+      <button type="button" class="difficulty-btn" data-level="easy" aria-pressed="false">Dễ</button>
+      <button type="button" class="difficulty-btn is-active" data-level="medium" aria-pressed="true">Vừa</button>
+      <button type="button" class="difficulty-btn" data-level="hard" aria-pressed="false">Khó</button>
+    </div>
     <div class="score-panel" aria-live="polite" aria-label="Điểm số">
       <span class="score score-x"><span class="score-label">X</span><span class="score-value" id="score-x">0</span></span>
       <span class="score score-o"><span class="score-label">O</span><span class="score-value" id="score-o">0</span></span>
