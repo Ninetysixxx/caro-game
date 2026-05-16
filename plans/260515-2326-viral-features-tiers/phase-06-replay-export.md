@@ -3,7 +3,7 @@ phase: 6
 title: Replay Export (GIF / Video)
 tier: A
 effort: 5h
-status: planned
+status: completed
 depends_on: []
 ---
 
