@@ -14,6 +14,9 @@
   <meta name="twitter:title" content="Cờ Caro VN" />
   <meta name="twitter:description" content="Cờ caro Việt Nam — daily puzzle, vs AI, chơi 2 người" />
   <meta name="twitter:image" content="https://caro.app/og-image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -25,11 +28,13 @@
 <body>
   <header class="app-header">
     <h1 class="app-title">Cờ Caro</h1>
-    <button type="button" class="share-btn" id="btn-share-header" aria-label="Chia sẻ game này">🔗</button>
-    <button type="button" class="share-btn" id="btn-stats-header" aria-label="Thống kê">📊</button>
-    <div class="streak-display" id="streak-chip" aria-label="Streak hiện tại">
-      <span class="streak-icon">🔥</span>
-      <span class="streak-value">0</span>
+    <div class="header-actions">
+      <div class="streak-display" id="streak-chip" aria-label="Streak hiện tại">
+        <span class="streak-icon">🔥</span>
+        <span class="streak-value">0</span>
+      </div>
+      <button type="button" class="share-btn" id="btn-share-header" aria-label="Chia sẻ game này">🔗</button>
+      <button type="button" class="share-btn" id="btn-stats-header" aria-label="Thống kê">📊</button>
     </div>
     <div class="mode-toggle" role="group" aria-label="Chế độ chơi">
       <button type="button" class="mode-btn is-active" data-mode="hotseat" aria-pressed="true">2 người</button>
