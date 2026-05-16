@@ -3,9 +3,9 @@ main = "src/index.js"
 compatibility_date = "2024-05-12"
 
 [vars]
-# Restrict to your frontend origin in production, e.g. "https://<user>.github.io".
-# Leave as "*" only for local dev.
-ALLOWED_ORIGIN = "*"
+# Restrict to your frontend origin in production.
+# GitHub Pages domain for tungtt2203.
+ALLOWED_ORIGIN = "https://ninetysixxx.github.io"
 
 [[durable_objects.bindings]]
 name = "ROOMS"
