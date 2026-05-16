@@ -16,6 +16,8 @@ import {
 import { shareContent, showToast, showManualCopy } from './share.js';
 import { formatWinResult, formatInviteText } from './share-formatter.js';
 import { snapshotBoard, downloadBlob } from './board-snapshot.js';
+import { recordGame } from './stats.js';
+import { toggleStatsModal } from './stats-ui.js';
 
 // ── Module-scoped state ───────────────────────────────────────────────────────
 
@@ -50,11 +52,28 @@ function defaultScores() {
 function loadScores() {
   try {
     const raw = localStorage.getItem(SCORES_KEY);
-    if (!raw) return defaultScores();
-    const parsed = JSON.parse(raw);
-    if (!parsed.hotseat || !parsed.ai || !parsed.daily) return defaultScores();
-    return parsed;
-  } catch { return defaultScores(); }
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.hotseat && parsed.ai && parsed.daily) return parsed;
+    }
+  } catch { /* ignore */ }
+
+  // Fallback to unified stats if old key was migrated
+  try {
+    const statsRaw = localStorage.getItem('caro-stats-v1');
+    if (statsRaw) {
+      const s = JSON.parse(statsRaw);
+      if (s && s.version === 1) {
+        return {
+          hotseat: { x: s.hotseat.x || 0, o: s.hotseat.o || 0, draws: s.hotseat.draws || 0 },
+          ai: { player: s.ai.wins || 0, ai: s.ai.losses || 0, draws: s.ai.draws || 0 },
+          daily: { wins: s.daily.totalWon || 0, losses: (s.daily.totalPlayed || 0) - (s.daily.totalWon || 0) },
+        };
+      }
+    }
+  } catch { /* ignore */ }
+
+  return defaultScores();
 }
 
 function saveScores() {
@@ -73,7 +92,7 @@ function updateScoreDisplay() {
   document.getElementById('score-draws').textContent = isDaily ? '-' : isAi ? scores.ai.draws : scores.hotseat.draws;
 }
 
-function bumpScore(winner) {
+function bumpScore(winner, details = {}) {
   if (mode === 'daily') {
     if (winner === dailyPuzzle?.player) {
       scores.daily.wins += 1;
@@ -89,6 +108,26 @@ function bumpScore(winner) {
   }
   saveScores();
   updateScoreDisplay();
+
+  // Record in unified stats + achievements
+  const actualMode = details.mode || mode;
+  let result;
+  if (actualMode === 'daily') {
+    result = winner === dailyPuzzle?.player ? 'win' : 'loss';
+  } else if (actualMode === 'ai') {
+    result = winner === null ? 'draw' : winner === PLAYER_X ? 'win' : 'loss';
+  } else {
+    result = winner === null ? 'draw' : winner === PLAYER_X ? 'x' : 'o';
+  }
+  const { newUnlocks } = recordGame({
+    mode: actualMode,
+    result,
+    attempts: details.attempts,
+    goal: details.goal,
+  });
+  if (newUnlocks.length > 0) {
+    newUnlocks.forEach((a) => showToast(`🏆 Mở khóa: ${a.title}`));
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -97,6 +136,8 @@ function syncUndoBtn() {
   const btn = document.getElementById('btn-undo');
   btn.disabled = state.history.length === 0 || state.status !== 'playing' || aiThinking;
 }
+
+
 
 function resetBoard() {
   hideGameOverModal();
@@ -139,7 +180,11 @@ function endDailyPuzzle(result) {
   }
   updateStatus(won ? `${dailyPuzzle.player} thắng!` : 'Thua rồi!');
   disableBoard();
-  bumpScore(won ? dailyPuzzle.player : null);
+  bumpScore(won ? dailyPuzzle.player : null, {
+    mode: 'daily',
+    attempts: dailyUserMoveCount,
+    goal: dailyPuzzle.goal,
+  });
 
   const streak = recordResult(dailyPuzzle.id, won, dailyUserMoveCount);
   updateStreakDisplay(streak.current, streak.max);
@@ -418,6 +463,11 @@ function bootstrap() {
         showManualCopy(result.text);
       }
     });
+  }
+
+  const headerStats = document.getElementById('btn-stats-header');
+  if (headerStats) {
+    headerStats.addEventListener('click', toggleStatsModal);
   }
 }
 

@@ -3,7 +3,7 @@ phase: 4
 title: Stats & Streaks Dashboard
 tier: A
 effort: 3h
-status: planned
+status: completed
 depends_on: [2]
 ---
 
@@ -136,18 +136,18 @@ caro-game/js/
 
 ## Todo List
 
-- [ ] Write `stats.js` with migration logic
-- [ ] Write `achievements.js` definitions + check
-- [ ] Write `stats-ui.js` modal
-- [ ] Add stats icon button to header
-- [ ] Add streak chip to header
-- [ ] Hook `recordGame` after every game end
-- [ ] Implement achievement toast notification
-- [ ] Wire share stats button (uses Phase 3)
-- [ ] Style modal + distribution bars + achievement grid
-- [ ] Migration test: old data → new schema
-- [ ] Update sw.js APP_SHELL
-- [ ] Add 2 more achievements after testing (total ~10)
+- [x] Write `stats.js` with migration logic
+- [x] Write `achievements.js` definitions + check
+- [x] Write `stats-ui.js` modal
+- [x] Add stats icon button to header
+- [x] Add streak chip to header
+- [x] Hook `recordGame` after every game end
+- [x] Implement achievement toast notification
+- [x] Wire share stats button (uses Phase 3)
+- [x] Style modal + distribution bars + achievement grid
+- [x] Migration test: old data → new schema
+- [x] Update sw.js APP_SHELL
+- [x] Add 2 more achievements after testing (total ~10)
 
 ## Success Criteria
 

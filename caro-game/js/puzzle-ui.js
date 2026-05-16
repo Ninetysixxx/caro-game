@@ -149,6 +149,7 @@ export function updateStreakDisplay(current, max) {
     }
   }
   if (!_streakEl) return;
+  _streakEl.classList.toggle('is-hidden', current < 1);
   const val = _streakEl.querySelector('.streak-value');
-  if (val) val.textContent = `${current}/${max}`;
+  if (val) val.textContent = String(current);
 }

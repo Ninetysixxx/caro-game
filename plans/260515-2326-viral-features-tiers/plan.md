@@ -36,7 +36,7 @@ Ship theo **tier độc lập**. Sau mỗi tier deploy, đo viral coefficient (s
 | 1 | [PWA Foundation](phase-01-pwa-foundation.md) | S | 3h | complete | — |
 | 2 | [Daily Puzzle Mode](phase-02-daily-puzzle.md) | S | 6h | in-progress | — |
 | 3 | [Share Card + OG Meta](phase-03-share-card.md) | S | 3h | complete | 2 |
-| 4 | [Stats & Streaks Dashboard](phase-04-stats-streaks.md) | A | 3h | planned | 2 |
+| 4 | [Stats & Streaks Dashboard](phase-04-stats-streaks.md) | A | 3h | complete | 2 |
 | 5 | [AI Difficulty Levels](phase-05-ai-difficulty.md) | A | 4h | planned | — |
 | 6 | [Replay Export GIF](phase-06-replay-export.md) | A | 5h | planned | — |
 | 7 | [Multiplayer Real-time](phase-07-multiplayer-stretch.md) | Stretch | 12h | planned | — |

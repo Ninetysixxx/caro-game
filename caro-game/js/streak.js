@@ -2,7 +2,7 @@
 
 const STREAK_KEY = 'caro-streak-v1';
 
-function defaultStreak() {
+export function defaultStreak() {
   return { current: 0, max: 0, lastWinUTC: null, history: [] };
 }
 
