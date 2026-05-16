@@ -6,9 +6,14 @@ Vanilla JS implementation của cờ caro Việt Nam: board 20×20, win = 5 liê
 
 ## Features
 
-- 2 chế độ: **Hot-seat** (2 người) và **vs AI** (heuristic, <500ms/lượt)
+- 3 chế độ:
+  - **Hot-seat** (2 ngườii)
+  - **vs AI** (heuristic, <500ms/lượt)
+  - **Hôm nay** — Daily Puzzle Mode: 5 starter puzzles với mục tiêu win-in-N / block-in-N
 - Undo nước đi (trước khi game kết thúc)
 - Score tracking persist qua reload (localStorage)
+- **Streak tracking** (localStorage) cho Daily Puzzle Mode
+- **Emoji share grid** — chia sẻ kết quả puzzle dạng emoji grid
 - Highlight nước cuối + vẽ đường thắng (SVG animated)
 - Responsive 320px → desktop
 - Accessibility: ARIA labels, `aria-pressed`, `prefers-reduced-motion`
@@ -27,10 +32,15 @@ caro-game/
 ├── index.html
 ├── styles.css
 ├── js/
-│   ├── game.js   # State, rules, win detection (caro VN)
-│   ├── ai.js     # Heuristic pattern scoring
-│   ├── ui.js     # Render + event delegation
-│   └── main.js   # Bootstrap, mode toggle, scores
+│   ├── game.js          # State, rules, win detection (caro VN)
+│   ├── ai.js            # Heuristic pattern scoring
+│   ├── ui.js            # Render + event delegation
+│   ├── main.js          # Bootstrap, mode toggle, scores
+│   ├── puzzle-bank.js   # Daily puzzle definitions (5 starters)
+│   ├── puzzle-engine.js # Puzzle validation: win-in-N / block-in-N
+│   ├── puzzle-ui.js     # Puzzle board UI + modal flow
+│   └── streak.js        # Streak tracking (localStorage)
+├── test-daily.mjs       # Node test runner for puzzle engine
 └── README.md
 ```
 
@@ -66,6 +76,15 @@ URL sẽ là `https://<username>.github.io/caro-game/`.
 - Win: 5 quân liên tiếp (ngang/dọc/chéo)
 - **Chặn 2 đầu**: nếu cả hai đầu của dãy 5 bị đối thủ chặn (hoặc cạnh bàn) → **không tính thắng**
 - Long-line (6+): tính thắng
+
+## Daily Puzzle Mode
+
+- **Chọn puzzle theo ngày UTC**: mỗi ngày một puzzle duy nhất
+- **Mục tiêu**:
+  - `win-in-N`: thắng trong N nước đi
+  - `block-in-N`: chặn đối thủ thắng trong N nước đi
+- **Streak tracking**: đếm số ngày liên tiếp giải được puzzle (lưu localStorage)
+- **Emoji share grid**: sau khi hoàn thành, hiển thị modal chia sẻ kết quả dạng emoji grid
 
 ## Plan
 

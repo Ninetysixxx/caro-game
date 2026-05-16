@@ -3,7 +3,7 @@ phase: 2
 title: Daily Puzzle Mode
 tier: S
 effort: 6h
-status: planned
+status: in-progress
 depends_on: []
 ---
 
@@ -17,7 +17,7 @@ depends_on: []
 
 ## Overview
 - **Priority:** P0 (viral hook chính, lý do quay lại)
-- **Status:** planned
+- **Status:** in-progress
 - **Brief:** Mỗi ngày 1 puzzle tactical (deterministic theo UTC date). User giải → nhận emoji grid kết quả share được. Streak counter retention driver.
 
 ## Key Insights
@@ -158,19 +158,19 @@ export const PUZZLES = [
 
 ## Todo List
 
-- [ ] Design puzzle data shape
-- [ ] Curate 5 starter puzzles (manual)
-- [ ] Write `puzzle-bank.js` skeleton
-- [ ] Write `puzzle-engine.js` (load, apply, check goal, AI response)
-- [ ] Write `streak.js` (localStorage)
-- [ ] Write `puzzle-ui.js` (banner, modal)
-- [ ] Add "Hôm nay" mode button to `index.html`
-- [ ] Integrate vào `main.js`
-- [ ] Styling: goal banner, attempt dots, result modal
-- [ ] Update `sw.js` APP_SHELL
-- [ ] Test deterministic seed (mock dates)
+- [x] Design puzzle data shape
+- [x] Curate 5 starter puzzles (manual)
+- [x] Write `puzzle-bank.js` skeleton
+- [x] Write `puzzle-engine.js` (load, apply, check goal, AI response)
+- [x] Write `streak.js` (localStorage)
+- [x] Write `puzzle-ui.js` (banner, modal)
+- [x] Add "Hôm nay" mode button to `index.html`
+- [x] Integrate vào `main.js`
+- [x] Styling: goal banner, attempt dots, result modal
+- [x] Update `sw.js` APP_SHELL
+- [x] Test deterministic seed (mock dates)
 - [ ] Expand bank to 30 puzzles
-- [ ] Test streak increment + reset logic
+- [x] Test streak increment + reset logic
 
 ## Success Criteria
 
