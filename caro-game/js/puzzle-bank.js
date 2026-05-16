@@ -47,7 +47,10 @@ export const PUZZLES = [
       { row: 10, col: 6, player: 'O' },
       { row: 7, col: 10, player: 'O' },
     ],
-    solution: [{ row: 10, col: 10 }, { row: 10, col: 11 }],
+    solution: [{ row: 10, col: 10 }, { row: 12, col: 10 }],
+    scriptedResponses: [
+      { row: 10, col: 11 }, // AI blocks the horizontal threat
+    ],
     hint: 'Tạo fork (hai mối đe dọa)',
   },
   {
@@ -72,18 +75,26 @@ export const PUZZLES = [
     id: 5,
     goal: 'block-in-2',
     player: 'X',
-    maxMoves: 3,
+    maxMoves: 2,
     initial: [
-      { row: 14, col: 8, player: 'O' },
-      { row: 14, col: 9, player: 'O' },
-      { row: 14, col: 10, player: 'O' },
-      { row: 14, col: 11, player: 'O' },
-      { row: 16, col: 8, player: 'O' },
-      { row: 16, col: 9, player: 'O' },
-      { row: 16, col: 10, player: 'O' },
-      { row: 15, col: 15, player: 'X' },
+      // Threat 1 — immediate win if not blocked (only one open end)
+      { row: 10, col: 8, player: 'O' },
+      { row: 10, col: 9, player: 'O' },
+      { row: 10, col: 10, player: 'O' },
+      { row: 10, col: 11, player: 'O' },
+      { row: 10, col: 7, player: 'X' },
+      // Threat 2 — needs AI setup; one side already blocked
+      { row: 12, col: 8, player: 'O' },
+      { row: 12, col: 9, player: 'O' },
+      { row: 12, col: 10, player: 'O' },
+      { row: 12, col: 11, player: 'X' },
+      // Neutral stone
+      { row: 11, col: 15, player: 'X' },
     ],
-    solution: [{ row: 14, col: 12 }, { row: 16, col: 11 }],
+    solution: [
+      { row: 10, col: 12 }, // Block threat 1
+      { row: 12, col: 6 },  // Block threat 2 after AI expands it
+    ],
     hint: 'Chặn đòn tấn công của đối phương',
   },
 ];

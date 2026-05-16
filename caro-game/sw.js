@@ -1,4 +1,4 @@
-const VERSION = 'caro-v5';
+const VERSION = 'caro-v8';
 const APP_SHELL = [
   './',
   'index.html',
