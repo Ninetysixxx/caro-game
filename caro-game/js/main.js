@@ -203,7 +203,9 @@ function endDailyPuzzle(result) {
     displayGrades.push('⬛');
   }
 
-  showResultModal(result, dailyPuzzle, streak, displayGrades, dailyUserMoveCount, getTodayPuzzleNumber());
+  showResultModal(result, dailyPuzzle, streak, displayGrades, dailyUserMoveCount, getTodayPuzzleNumber(), () => {
+    import('./replay-ui.js').then((mod) => mod.showReplayModal(state));
+  });
 }
 
 let _gameoverModal = null;
@@ -236,6 +238,7 @@ function showGameOverModal() {
       <p class="puzzle-modal-subtitle">${moves} nước đã đi</p>
       <div class="puzzle-modal-actions">
         <button type="button" class="ctrl-btn" id="go-share-btn" aria-label="Chia sẻ kết quả">Chia sẻ</button>
+        <button type="button" class="ctrl-btn" id="go-replay-btn" aria-label="Lưu replay">Lưu replay</button>
         <button type="button" class="ctrl-btn" id="go-save-btn" aria-label="Lưu ảnh ván cờ">Lưu ảnh</button>
         <button type="button" class="ctrl-btn" id="go-close-btn" aria-label="Đóng">Đóng</button>
       </div>
@@ -246,10 +249,16 @@ function showGameOverModal() {
   const closeBtn = _gameoverModal.querySelector('#go-close-btn');
   const shareBtn = _gameoverModal.querySelector('#go-share-btn');
   const saveBtn = _gameoverModal.querySelector('#go-save-btn');
+  const replayBtn = _gameoverModal.querySelector('#go-replay-btn');
   closeBtn.focus();
 
   closeBtn.addEventListener('click', hideGameOverModal);
   _gameoverModal.querySelector('.puzzle-modal-backdrop').addEventListener('click', hideGameOverModal);
+
+  replayBtn.addEventListener('click', () => {
+    hideGameOverModal();
+    import('./replay-ui.js').then((mod) => mod.showReplayModal(state));
+  });
 
   shareBtn.addEventListener('click', async () => {
     const result = await shareContent({ title: 'Cờ Caro VN', text: shareText, url });

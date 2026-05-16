@@ -1,4 +1,4 @@
-const VERSION = 'caro-v2';
+const VERSION = 'caro-v3';
 const APP_SHELL = [
   './',
   'index.html',
@@ -23,6 +23,11 @@ const APP_SHELL = [
   'js/share.js',
   'js/share-formatter.js',
   'js/board-snapshot.js',
+  'js/replay-renderer.js',
+  'js/replay-encoder.js',
+  'js/replay-ui.js',
+  'vendor/gif.js',
+  'vendor/gif.worker.js',
   'og-image.png',
   'icons/icon-192.png',
   'icons/icon-512.png',

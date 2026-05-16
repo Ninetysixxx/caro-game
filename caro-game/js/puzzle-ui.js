@@ -48,7 +48,7 @@ export function updateAttempts(used, max) {
 
 // ── Result Modal ───────────────────────────────────────────────────────────────
 
-export function showResultModal(result, puzzle, streak, moveGrades, actualMoveCount, puzzleNumber) {
+export function showResultModal(result, puzzle, streak, moveGrades, actualMoveCount, puzzleNumber, onReplay) {
   hideResultModal();
 
   const won = result.status === 'success';
@@ -63,6 +63,9 @@ export function showResultModal(result, puzzle, streak, moveGrades, actualMoveCo
         : 'Không hoàn thành mục tiêu';
 
   const shareText = buildShareText(puzzleNumber, won, moveGrades, scoreLabel);
+  const replayBtnHtml = onReplay
+    ? `<button type="button" class="ctrl-btn" id="puzzle-replay-btn" aria-label="Lưu replay">Lưu replay</button>`
+    : '';
 
   _modalEl = document.createElement('div');
   _modalEl.className = 'puzzle-modal';
@@ -81,6 +84,7 @@ export function showResultModal(result, puzzle, streak, moveGrades, actualMoveCo
       </div>
       <div class="puzzle-modal-actions">
         <button type="button" class="ctrl-btn" id="puzzle-share-btn" aria-label="Chia sẻ kết quả">Chia sẻ</button>
+        ${replayBtnHtml}
         <button type="button" class="ctrl-btn" id="puzzle-close-btn" aria-label="Đóng">Đóng</button>
       </div>
     </div>
@@ -93,6 +97,17 @@ export function showResultModal(result, puzzle, streak, moveGrades, actualMoveCo
   if (closeBtn) closeBtn.focus();
 
   closeBtn.addEventListener('click', hideResultModal);
+
+  if (onReplay) {
+    const replayBtn = _modalEl.querySelector('#puzzle-replay-btn');
+    if (replayBtn) {
+      replayBtn.addEventListener('click', () => {
+        hideResultModal();
+        onReplay();
+      });
+    }
+  }
+
   shareBtn.addEventListener('click', async () => {
     const url = `${location.origin}${location.pathname}?ref=share`;
     const result = await shareContent({ title: 'Cờ Caro VN', text: shareText, url });
