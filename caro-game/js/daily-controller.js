@@ -98,7 +98,7 @@ export function triggerDailyAiTurn(ctx) {
     statusText: 'AI đang nghĩ...',
     pickMove: () => aiResponse(ctx.state, daily.puzzle, null, daily.userMoveCount - 1),
     onMove: () => {
-      const result = checkDailyResult(ctx, true);
+      const result = checkGoal(ctx.state, daily.puzzle, daily.userMoveCount, true);
       if (result.status !== 'in-progress') {
         endDailyPuzzle(ctx, result);
       } else {

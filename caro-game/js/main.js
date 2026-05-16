@@ -41,9 +41,14 @@ const ctx = {
   },
 };
 
+// daily/multiplayer: undo disabled until per-mode policy
 function syncUndoBtn() {
   document.getElementById('btn-undo').disabled =
-    state.history.length === 0 || state.status !== 'playing' || isAiThinking();
+    mode === 'daily' ||
+    mode === 'multiplayer' ||
+    state.history.length === 0 ||
+    state.status !== 'playing' ||
+    isAiThinking();
 }
 
 function resetBoard() {
@@ -106,7 +111,7 @@ function onCellClick(row, col) {
 }
 
 function onUndoClick() {
-  if (mode === 'multiplayer' || isAiThinking()) return;
+  if (mode === 'multiplayer' || mode === 'daily' || isAiThinking()) return;
   if (state.history.length === 0 || state.status !== 'playing') return;
 
   undoMove(state);
