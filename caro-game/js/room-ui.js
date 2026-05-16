@@ -138,6 +138,37 @@ export function hideLatency() {
   }
 }
 
+export function showServerNotConfiguredModal(onClose) {
+  hideRoomModal();
+  _onCloseCb = onClose;
+  _modal = document.createElement('div');
+  _modal.className = 'room-modal';
+  _modal.setAttribute('role', 'dialog');
+  _modal.setAttribute('aria-modal', 'true');
+  _modal.setAttribute('aria-label', 'Server chưa cấu hình');
+  const snippet = `&lt;script&gt;window.CARO_SERVER_URL='https://your-worker.workers.dev'&lt;/script&gt;`;
+  _modal.innerHTML = `
+    <div class="room-modal-backdrop"></div>
+    <div class="room-modal-panel">
+      <h2 class="room-modal-title">Online chưa sẵn sàng</h2>
+      <p class="room-modal-subtitle">Cần cấu hình URL của Caro server trước khi chơi online.</p>
+      <p class="room-modal-subtitle" style="text-align:left;">Thêm vào <code>index.html</code> trước khi nạp <code>main.js</code>:</p>
+      <pre style="background:rgba(0,0,0,0.06);padding:8px;border-radius:6px;font-size:12px;overflow:auto;text-align:left;">${snippet}</pre>
+      <p class="room-modal-subtitle" style="text-align:left;font-size:12px;">Hoặc deploy server theo hướng dẫn ở <code>caro-server/README.md</code>.</p>
+      <div class="room-modal-actions">
+        <button type="button" class="ctrl-btn" id="room-close-btn">Đã hiểu</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(_modal);
+  _modal.querySelector('#room-close-btn').addEventListener('click', () => {
+    hideRoomModal();
+  });
+  _modal.querySelector('.room-modal-backdrop').addEventListener('click', () => {
+    hideRoomModal();
+  });
+}
+
 function _onEsc(e) {
   if (e.key === 'Escape') hideRoomModal();
 }

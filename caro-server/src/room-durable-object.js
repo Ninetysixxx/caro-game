@@ -3,7 +3,12 @@ export class RoomDurableObject {
     this.state = state;
     this.env = env;
     this.sessions = new Map();
-    this.players = { X: null, O: null };
+    // Identity is anchored to opaque tokens (not clientIds) so a disconnect+reconnect
+    // keeps the player on the same color. clientToColor maps the current live
+    // socket to a color; playerTokens reserves each seat to the token that claimed it.
+    this.playerTokens = { X: null, O: null };
+    this.clientToColor = new Map();
+    this.clientToToken = new Map();
     this.spectators = [];
     this.gameState = null;
     this.createdAt = Date.now();
@@ -65,10 +70,10 @@ export class RoomDurableObject {
 
     switch (msg.type) {
       case 'create':
-        this.handleCreate(clientId, ws);
+        this.handleCreate(clientId, ws, msg.token);
         break;
       case 'join':
-        this.handleJoin(clientId, ws, msg.room);
+        this.handleJoin(clientId, ws, msg.room, msg.token);
         break;
       case 'move':
         this.handleMove(clientId, ws, msg.row, msg.col);
@@ -84,16 +89,32 @@ export class RoomDurableObject {
     }
   }
 
-  handleCreate(clientId, ws) {
+  _ensureToken(token) {
+    // Legacy clients may not send a token — synthesize one so identity logic still works.
+    return token || crypto.randomUUID();
+  }
+
+  _bindClientToColor(clientId, color, token) {
+    this.clientToColor.set(clientId, color);
+    this.clientToToken.set(clientId, token);
+  }
+
+  handleCreate(clientId, ws, token) {
+    token = this._ensureToken(token);
+
     if (!this.gameState) {
       this.gameState = this.createGameState();
-      this.players.X = clientId;
+      this.playerTokens.X = token;
     }
 
-    if (this.players.X !== clientId) {
+    // The X seat is reserved for the first creator's token. Re-creates from the
+    // same token are idempotent; from a different token they're an error.
+    if (this.playerTokens.X !== token) {
       this.sendTo(clientId, { type: 'error', code: 'ALREADY_CREATED', message: 'Room already created' });
       return;
     }
+
+    this._bindClientToColor(clientId, 'X', token);
 
     this.sendTo(clientId, {
       type: 'created',
@@ -103,29 +124,63 @@ export class RoomDurableObject {
     });
   }
 
-  handleJoin(clientId, ws, roomId) {
+  handleJoin(clientId, ws, roomId, token) {
     if (roomId && roomId !== this.roomId) {
       this.sendTo(clientId, { type: 'error', code: 'ROOM_MISMATCH', message: 'Room ID mismatch' });
       return;
     }
 
-    if (this.players.X === clientId || this.players.O === clientId) {
-      const color = this.players.X === clientId ? 'X' : 'O';
+    token = this._ensureToken(token);
+
+    // Init game state on direct join (e.g. shared room link hit before any create).
+    if (!this.gameState) this.gameState = this.createGameState();
+
+    // Token-based seat restore: if this token already owns a color, bind to it.
+    let color = null;
+    if (this.playerTokens.X === token) color = 'X';
+    else if (this.playerTokens.O === token) color = 'O';
+
+    if (color) {
+      // Evict any prior live session bound to this color to prevent
+      // double-occupancy (one token, two browsers → only the newest wins).
+      this._evictColor(color, clientId);
+      this._bindClientToColor(clientId, color, token);
       this.sendTo(clientId, { type: 'joined', color, state: this.gameState });
+      // Tell peer the seat is reoccupied so any "opponent-left" UI clears.
+      this.broadcast({ type: 'opponent-joined' }, clientId);
+      this.broadcast({ type: 'state', state: this.gameState, lastMove: null }, clientId);
       return;
     }
 
-    if (!this.players.X) {
-      this.players.X = clientId;
+    // Fresh token — fill open seats X → O, else spectator.
+    if (!this.playerTokens.X) {
+      this.playerTokens.X = token;
+      this._bindClientToColor(clientId, 'X', token);
       this.sendTo(clientId, { type: 'joined', color: 'X', state: this.gameState });
-    } else if (!this.players.O) {
-      this.players.O = clientId;
+    } else if (!this.playerTokens.O) {
+      this.playerTokens.O = token;
+      this._bindClientToColor(clientId, 'O', token);
       this.sendTo(clientId, { type: 'joined', color: 'O', state: this.gameState });
       this.broadcast({ type: 'state', state: this.gameState, lastMove: null });
       this.broadcast({ type: 'opponent-joined' }, clientId);
     } else {
       this.spectators.push(clientId);
       this.sendTo(clientId, { type: 'joined', color: 'spectator', state: this.gameState });
+    }
+  }
+
+  _evictColor(color, exceptClientId) {
+    for (const [otherId, otherColor] of this.clientToColor) {
+      if (otherColor === color && otherId !== exceptClientId) {
+        // Remove bindings before closing so handleDisconnect doesn't broadcast opponent-left.
+        this.clientToColor.delete(otherId);
+        this.clientToToken.delete(otherId);
+        this.sendTo(otherId, { type: 'error', code: 'SESSION_REPLACED', message: 'Phiên chơi đã bị thay thế' });
+        const otherWs = this.sessions.get(otherId);
+        if (otherWs) {
+          try { otherWs.close(); } catch (e) { /* ignore */ }
+        }
+      }
     }
   }
 
@@ -143,8 +198,8 @@ export class RoomDurableObject {
       return;
     }
 
-    const color = this.players.X === clientId ? 'X' : this.players.O === clientId ? 'O' : null;
-    if (!color) {
+    const color = this.clientToColor.get(clientId);
+    if (!color || color === 'spectator') {
       this.sendTo(clientId, { type: 'error', code: 'NOT_PLAYER', message: 'You are not a player' });
       return;
     }
@@ -178,8 +233,8 @@ export class RoomDurableObject {
   }
 
   handleResign(clientId, ws) {
-    const color = this.players.X === clientId ? 'X' : this.players.O === clientId ? 'O' : null;
-    if (!color || !this.gameState) return;
+    const color = this.clientToColor.get(clientId);
+    if (!color || color === 'spectator' || !this.gameState) return;
     if (this.gameState.status !== 'playing') return;
 
     this.gameState.status = 'won';
@@ -189,12 +244,17 @@ export class RoomDurableObject {
 
   handleDisconnect(clientId) {
     this.sessions.delete(clientId);
-    if (this.players.X === clientId) {
-      this.players.X = null;
-      this.broadcast({ type: 'opponent-left' });
-    } else if (this.players.O === clientId) {
-      this.players.O = null;
-      this.broadcast({ type: 'opponent-left' });
+    const color = this.clientToColor.get(clientId);
+    this.clientToColor.delete(clientId);
+    this.clientToToken.delete(clientId);
+
+    // Tokens persist on disconnect so the same player can rejoin and reclaim their seat.
+    // We only broadcast "opponent-left" if no other live session holds that color.
+    if (color === 'X' || color === 'O') {
+      const stillConnected = Array.from(this.clientToColor.values()).includes(color);
+      if (!stillConnected) {
+        this.broadcast({ type: 'opponent-left' });
+      }
     } else {
       this.spectators = this.spectators.filter((id) => id !== clientId);
     }

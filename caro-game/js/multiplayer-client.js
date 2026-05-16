@@ -36,15 +36,31 @@ export class MultiplayerClient {
     if (!res.ok) throw new Error('Failed to create room');
     const { room } = await res.json();
     this.roomId = room;
+    this.token = this._getOrCreateToken(room);
     await this._connect(`/r/${room}`);
-    this._send({ type: 'create' });
+    this._send({ type: 'create', token: this.token });
     return room;
   }
 
   async join(roomId) {
     this.roomId = roomId;
+    this.token = this._getOrCreateToken(roomId);
     await this._connect(`/r/${roomId}`);
-    this._send({ type: 'join', room: roomId });
+    this._send({ type: 'join', room: roomId, token: this.token });
+  }
+
+  _getOrCreateToken(roomId) {
+    const key = `caro-mp-token-${roomId}`;
+    try {
+      let t = localStorage.getItem(key);
+      if (!t) {
+        t = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem(key, t);
+      }
+      return t;
+    } catch {
+      return (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
   }
 
   async _connect(path) {
@@ -167,9 +183,8 @@ export class MultiplayerClient {
       const path = this.roomId ? `/r/${this.roomId}` : null;
       if (!path) return;
       this._connect(path).then(() => {
-        if (this.color) {
-          this._send({ type: 'join', room: this.roomId });
-        }
+        // Always rejoin with token so server can restore identity (same color).
+        this._send({ type: 'join', room: this.roomId, token: this.token });
       }).catch(() => {
         // close event triggers again
       });
