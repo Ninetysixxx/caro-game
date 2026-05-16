@@ -130,34 +130,30 @@ async function encodeGIF(state, opts) {
   });
 
   const totalMoves = state.history.length || 1;
+  const winFrames = Math.max(1, Math.round(WIN_LINE_DURATION_MS / MOVE_DURATION_MS));
+  const holdFrames = Math.max(1, Math.round(HOLD_DURATION_MS / MOVE_DURATION_MS));
 
-  // Build frames list
-  const frames = [];
+  const addFrame = () => gif.addFrame(canvas, { delay: MOVE_DURATION_MS, copy: true });
+
+  // Interleave render + addFrame so each captured frame reflects its own state.
+  // (gif.js reads canvas pixels synchronously when copy:true, so addFrame must
+  // happen between renders rather than after all renders complete.)
   for (let i = 0; i < totalMoves; i++) {
     if (signal?.aborted) throw new Error('Aborted');
     renderFrame(ctx, state, i);
-    frames.push({ delay: MOVE_DURATION_MS });
+    addFrame();
   }
-
-  // Win-line animation frames
-  const winFrames = Math.max(1, Math.round(WIN_LINE_DURATION_MS / MOVE_DURATION_MS));
   for (let i = 0; i < winFrames; i++) {
     if (signal?.aborted) throw new Error('Aborted');
     renderFrame(ctx, state, totalMoves - 1);
-    if (state.winLine) {
-      const p = (i + 1) / winFrames;
-      drawWinLineAnimated(ctx, state.winLine, p);
-    }
-    frames.push({ delay: MOVE_DURATION_MS });
+    if (state.winLine) drawWinLineAnimated(ctx, state.winLine, (i + 1) / winFrames);
+    addFrame();
   }
-
-  // Hold final frame
-  const holdFrames = Math.max(1, Math.round(HOLD_DURATION_MS / MOVE_DURATION_MS));
   for (let i = 0; i < holdFrames; i++) {
     if (signal?.aborted) throw new Error('Aborted');
     renderFrame(ctx, state, totalMoves - 1);
     if (state.winLine) drawWinLineAnimated(ctx, state.winLine, 1);
-    frames.push({ delay: MOVE_DURATION_MS });
+    addFrame();
   }
 
   return new Promise((resolve, reject) => {
@@ -176,10 +172,6 @@ async function encodeGIF(state, opts) {
       clearTimeout(timeoutId);
       reject(new Error('GIF encoding error: ' + err));
     });
-
-    for (const frame of frames) {
-      gif.addFrame(canvas, { delay: frame.delay, copy: true });
-    }
 
     gif.render();
   });
