@@ -4,6 +4,8 @@
 >
 > Cờ caro Việt Nam chạy trên trình duyệt: board 20×20, win = 5 liên tiếp, **chặn 2 đầu = không tính**.
 
+![Cờ Caro VN — Gameplay](docs/screenshots/gameplay.png)
+
 ---
 
 ## Tính năng
