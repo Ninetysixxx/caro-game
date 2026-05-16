@@ -3,7 +3,7 @@ phase: 7
 title: Multiplayer Real-time (Stretch)
 tier: Stretch
 effort: 12h
-status: planned
+status: completed
 depends_on: []
 ---
 
@@ -161,21 +161,21 @@ caro-server/                    # NEW separate folder
 
 ## Todo List
 
-- [ ] Set up Cloudflare account + Wrangler
-- [ ] Scaffold caro-server project
-- [ ] Implement room Durable Object (state, WS handler)
-- [ ] Implement Worker routes (/create, /r/{id})
-- [ ] Deploy to Cloudflare → get production URL
-- [ ] Write `multiplayer-client.js` (connect, reconnect, send/recv)
-- [ ] Write `room-ui.js` (create/join modals, status banner)
-- [ ] Integrate main.js mode dispatch
-- [ ] Test 2-player sync (latency)
-- [ ] Test reconnect after network drop
-- [ ] Test spectator mode
-- [ ] Test concurrent rooms (10+)
-- [ ] Add QR code button to room modal
-- [ ] CORS config on Worker (allow caro-game origin)
-- [ ] Document deploy steps in `caro-server/README.md`
+- [x] Set up Cloudflare account + Wrangler
+- [x] Scaffold caro-server project
+- [x] Implement room Durable Object (state, WS handler)
+- [x] Implement Worker routes (/create, /r/{id})
+- [x] Deploy to Cloudflare → get production URL
+- [x] Write `multiplayer-client.js` (connect, reconnect, send/recv)
+- [x] Write `room-ui.js` (create/join modals, status banner)
+- [x] Integrate main.js mode dispatch
+- [x] Test 2-player sync (latency)
+- [x] Test reconnect after network drop
+- [x] Test spectator mode
+- [x] Test concurrent rooms (10+)
+- [x] Add QR code button to room modal
+- [x] CORS config on Worker (allow caro-game origin)
+- [x] Document deploy steps in `caro-server/README.md`
 
 ## Success Criteria
 

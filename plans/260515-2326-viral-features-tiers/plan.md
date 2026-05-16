@@ -39,7 +39,7 @@ Ship theo **tier độc lập**. Sau mỗi tier deploy, đo viral coefficient (s
 | 4 | [Stats & Streaks Dashboard](phase-04-stats-streaks.md) | A | 3h | completed | 2 |
 | 5 | [AI Difficulty Levels](phase-05-ai-difficulty.md) | A | 4h | completed | — |
 | 6 | [Replay Export GIF](phase-06-replay-export.md) | A | 5h | completed | — |
-| 7 | [Multiplayer Real-time](phase-07-multiplayer-stretch.md) | Stretch | 12h | planned | — |
+| 7 | [Multiplayer Real-time](phase-07-multiplayer-stretch.md) | Stretch | 12h | completed | — |
 
 ## Shipping Checkpoints
 

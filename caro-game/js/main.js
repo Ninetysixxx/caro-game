@@ -18,16 +18,26 @@ import { formatWinResult, formatInviteText } from './share-formatter.js';
 import { snapshotBoard, downloadBlob } from './board-snapshot.js';
 import { recordGame } from './stats.js';
 import { toggleStatsModal } from './stats-ui.js';
+import { MultiplayerClient } from './multiplayer-client.js';
+import {
+  showCreateRoomModal, showJoinRoomModal, updateRoomStatus,
+  hideRoomModal, showDisconnectBanner, hideDisconnectBanner,
+  showLatency, hideLatency,
+} from './room-ui.js';
 
 // ── Module-scoped state ───────────────────────────────────────────────────────
 
 let state = createState();
-let mode = 'hotseat'; // 'hotseat' | 'ai' | 'daily'
+let mode = 'hotseat'; // 'hotseat' | 'ai' | 'daily' | 'multiplayer'
 const DIFF_KEY = 'caro-ai-difficulty-v1';
 let aiLevel = localStorage.getItem(DIFF_KEY) || 'medium';
 let scores = loadScores();
 let aiThinking = false;
 let aiTimer = null;
+
+// Multiplayer
+const SERVER_URL = window.CARO_SERVER_URL || 'https://caro-server.YOUR_USER.workers.dev';
+let multiplayer = null;
 
 // Daily puzzle state
 let dailyPuzzle = null;
@@ -87,11 +97,12 @@ function saveScores() {
 function updateScoreDisplay() {
   const isAi = mode === 'ai';
   const isDaily = mode === 'daily';
-  document.querySelector('.score-x .score-label').textContent = isAi ? 'Bạn' : isDaily ? 'Thắng' : 'X';
-  document.querySelector('.score-o .score-label').textContent = isAi ? 'AI' : isDaily ? 'Thua' : 'O';
-  document.getElementById('score-x').textContent = isDaily ? scores.daily.wins : isAi ? scores.ai.player : scores.hotseat.x;
-  document.getElementById('score-o').textContent = isDaily ? scores.daily.losses : isAi ? scores.ai.ai : scores.hotseat.o;
-  document.getElementById('score-draws').textContent = isDaily ? '-' : isAi ? scores.ai.draws : scores.hotseat.draws;
+  const isMp = mode === 'multiplayer';
+  document.querySelector('.score-x .score-label').textContent = isAi ? 'Bạn' : isDaily ? 'Thắng' : isMp ? 'Bạn' : 'X';
+  document.querySelector('.score-o .score-label').textContent = isAi ? 'AI' : isDaily ? 'Thua' : isMp ? 'Đối thủ' : 'O';
+  document.getElementById('score-x').textContent = isDaily ? scores.daily.wins : isAi ? scores.ai.player : isMp ? '-' : scores.hotseat.x;
+  document.getElementById('score-o').textContent = isDaily ? scores.daily.losses : isAi ? scores.ai.ai : isMp ? '-' : scores.hotseat.o;
+  document.getElementById('score-draws').textContent = isDaily ? '-' : isAi ? scores.ai.draws : isMp ? '-' : scores.hotseat.draws;
 }
 
 function bumpScore(winner, details = {}) {
@@ -360,6 +371,12 @@ function triggerAiTurn() {
 
 function onCellClick(row, col) {
   if (state.status !== 'playing') return;
+  if (mode === 'multiplayer') {
+    if (multiplayer && multiplayer.color === state.currentPlayer) {
+      multiplayer.sendMove(row, col);
+    }
+    return;
+  }
   if (!makeMove(state, row, col)) return;
   renderBoard(state);
   highlightLastMove(row, col);
@@ -392,6 +409,7 @@ function onCellClick(row, col) {
 }
 
 function onUndoClick() {
+  if (mode === 'multiplayer') return;
   if (aiThinking || state.history.length === 0) return;
   if (state.status !== 'playing') return;
 
@@ -410,6 +428,16 @@ function onUndoClick() {
 
 function onRestartClick() {
   cancelAiTurn();
+  if (mode === 'multiplayer') {
+    if (multiplayer) {
+      multiplayer.disconnect();
+      multiplayer = null;
+    }
+    hideDisconnectBanner();
+    hideLatency();
+    showMultiplayerSetup();
+    return;
+  }
   if (mode === 'daily') {
     startDailyPuzzle();
   } else {
@@ -444,6 +472,12 @@ function onModeChange(newMode) {
   }
   cancelAiTurn();
   hideGameOverModal();
+  if (multiplayer) {
+    multiplayer.disconnect();
+    multiplayer = null;
+  }
+  hideDisconnectBanner();
+  hideLatency();
   mode = newMode;
   document.querySelectorAll('.mode-btn').forEach(btn => {
     const active = btn.dataset.mode === mode;
@@ -468,8 +502,168 @@ function onModeChange(newMode) {
     if (hasCompletedToday()) {
       updateStatus('Đã hoàn thành hôm nay — chơi lại không tính streak');
     }
+  } else if (mode === 'multiplayer') {
+    showMultiplayerSetup();
   } else {
     resetBoard();
+  }
+}
+
+// ── Multiplayer helpers ───────────────────────────────────────────────────────
+
+function showMultiplayerSetup() {
+  const existing = document.getElementById('mp-setup-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.className = 'room-modal';
+  modal.id = 'mp-setup-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.innerHTML = `
+    <div class="room-modal-backdrop"></div>
+    <div class="room-modal-panel">
+      <h2 class="room-modal-title">Chơi Online</h2>
+      <div class="room-modal-actions" style="flex-direction:column;gap:8px;">
+        <button type="button" class="ctrl-btn" id="mp-create-btn">Tạo phòng</button>
+        <button type="button" class="ctrl-btn" id="mp-join-btn">Vào phòng</button>
+        <button type="button" class="ctrl-btn" id="mp-cancel-btn">Hủy</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelector('#mp-create-btn').addEventListener('click', async () => {
+    modal.remove();
+    await initMultiplayerCreate();
+  });
+  modal.querySelector('#mp-join-btn').addEventListener('click', () => {
+    modal.remove();
+    showJoinRoomModal(
+      (code) => initMultiplayerJoin(code),
+      () => onModeChange('hotseat')
+    );
+  });
+  modal.querySelector('#mp-cancel-btn').addEventListener('click', () => {
+    modal.remove();
+    onModeChange('hotseat');
+  });
+  modal.querySelector('.room-modal-backdrop').addEventListener('click', () => {
+    modal.remove();
+    onModeChange('hotseat');
+  });
+}
+
+function setupMultiplayerHandlers() {
+  multiplayer.on('created', (msg) => {
+    showCreateRoomModal(msg.room, (link) => {
+      navigator.clipboard.writeText(link).then(() => showToast('Đã copy link!')).catch(() => showManualCopy(link));
+    }, () => {});
+  });
+
+  multiplayer.on('joined', (msg) => {
+    updateRoomStatus(msg.color === 'spectator' ? 'Đang xem' : 'Đối thủ đã vào — bắt đầu!');
+    if (msg.state) applyServerState(msg.state);
+  });
+
+  multiplayer.on('state', (msg) => {
+    hideDisconnectBanner();
+    applyServerState(msg.state);
+    if (msg.lastMove) highlightLastMove(msg.lastMove.row, msg.lastMove.col);
+    if (msg.state.status === 'won' || msg.state.status === 'draw') {
+      handleMultiplayerGameOver();
+    }
+  });
+
+  multiplayer.on('opponentLeft', () => {
+    updateStatus('Đối thủ đã thoát');
+    updateRoomStatus('Đối thủ đã thoát');
+  });
+
+  multiplayer.on('opponentJoined', () => {
+    updateRoomStatus('Đối thủ đã vào — bắt đầu!');
+  });
+
+  multiplayer.on('disconnected', () => {
+    showDisconnectBanner();
+  });
+
+  multiplayer.on('latency', (ms) => {
+    showLatency(ms);
+  });
+
+  multiplayer.on('error', (msg) => {
+    showToast(`Lỗi: ${msg.message}`);
+  });
+
+  multiplayer.on('reconnectFailed', () => {
+    showToast('Mất kết nối — không thể kết nối lại');
+  });
+}
+
+async function initMultiplayerCreate() {
+  multiplayer = new MultiplayerClient(SERVER_URL);
+  setupMultiplayerHandlers();
+  try {
+    await multiplayer.create();
+  } catch (e) {
+    showToast('Không tạo được phòng');
+    onModeChange('hotseat');
+  }
+}
+
+async function initMultiplayerJoin(roomId) {
+  multiplayer = new MultiplayerClient(SERVER_URL);
+  setupMultiplayerHandlers();
+  try {
+    await multiplayer.join(roomId);
+  } catch (e) {
+    showToast('Không vào được phòng');
+    onModeChange('hotseat');
+  }
+}
+
+function applyServerState(serverState) {
+  state.board = serverState.board;
+  state.currentPlayer = serverState.currentPlayer;
+  state.history = serverState.history;
+  state.status = serverState.status;
+  state.winner = serverState.winner;
+  state.winLine = serverState.winLine || null;
+  state.size = serverState.size || 20;
+  renderBoard(state);
+  if (state.winLine) {
+    drawWinLine(state.winLine);
+    updateStatus(`${state.winner} thắng!`);
+    disableBoard();
+  } else if (state.status === 'draw') {
+    updateStatus('Hòa!');
+    disableBoard();
+  } else {
+    const myTurn = multiplayer && multiplayer.color === state.currentPlayer;
+    updateStatus(myTurn ? 'Lượt của bạn' : `Lượt: ${state.currentPlayer}`);
+    if (multiplayer && multiplayer.color !== 'spectator') {
+      myTurn ? enableBoard() : disableBoard();
+    } else {
+      disableBoard();
+    }
+  }
+}
+
+function handleMultiplayerGameOver() {
+  if (state.winLine) drawWinLine(state.winLine);
+  const myWin = multiplayer && multiplayer.color === state.winner;
+  const title = state.status === 'draw' ? 'Hòa!' : myWin ? 'Bạn thắng!' : 'Bạn thua!';
+  updateStatus(title);
+  disableBoard();
+}
+
+function checkRoomParam() {
+  const params = new URLSearchParams(location.search);
+  const room = params.get('room');
+  if (room && /^[A-Z0-9]{4}$/.test(room.toUpperCase())) {
+    onModeChange('multiplayer');
+    initMultiplayerJoin(room.toUpperCase());
   }
 }
 
@@ -521,6 +715,8 @@ function bootstrap() {
   if (headerStats) {
     headerStats.addEventListener('click', toggleStatsModal);
   }
+
+  checkRoomParam();
 }
 
 if (document.readyState === 'loading') {

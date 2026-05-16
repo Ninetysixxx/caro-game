@@ -534,6 +534,111 @@ body {
   flex-wrap: wrap;
 }
 
+/* ===== Room modal ===== */
+.room-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.room-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+.room-modal-panel {
+  position: relative;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.room-modal-title {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+.room-modal-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.room-modal-link {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.room-modal-link input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.room-modal-status {
+  color: var(--highlight);
+  margin-bottom: 16px;
+  min-height: 1.4em;
+}
+.room-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ===== Disconnect banner ===== */
+.disconnect-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: var(--x);
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.disconnect-banner .spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ===== Latency badge ===== */
+.latency-badge {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 90;
+  padding: 4px 8px;
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.latency-badge.is-high {
+  color: var(--x);
+  font-weight: 700;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cell.x::after, .cell.o::after,
   .win-line, .mode-btn, .ctrl-btn, .stats-modal-panel { animation: none; transition: none; }

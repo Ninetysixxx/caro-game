@@ -26,6 +26,8 @@ const APP_SHELL = [
   'js/replay-renderer.js',
   'js/replay-encoder.js',
   'js/replay-ui.js',
+  'js/multiplayer-client.js',
+  'js/room-ui.js',
   'vendor/gif.js',
   'vendor/gif.worker.js',
   'og-image.png',
