@@ -1,4 +1,4 @@
-const VERSION = 'caro-v3';
+const VERSION = 'caro-v4';
 const APP_SHELL = [
   './',
   'index.html',
@@ -11,14 +11,18 @@ const APP_SHELL = [
   'js/ai-medium.js',
   'js/ai-hard.js',
   'js/ai-strategy.js',
+  'js/ai-turn-controller.js',
   'js/ui.js',
   'js/puzzle-bank.js',
   'js/puzzle-engine.js',
   'js/puzzle-ui.js',
+  'js/daily-controller.js',
   'js/streak.js',
   'js/stats.js',
   'js/achievements.js',
   'js/stats-ui.js',
+  'js/score-store.js',
+  'js/gameover-modal.js',
   'js/sw-register.js',
   'js/share.js',
   'js/share-formatter.js',
@@ -27,6 +31,7 @@ const APP_SHELL = [
   'js/replay-encoder.js',
   'js/replay-ui.js',
   'js/multiplayer-client.js',
+  'js/multiplayer-controller.js',
   'js/room-ui.js',
   'vendor/gif.js',
   'vendor/gif.worker.js',
