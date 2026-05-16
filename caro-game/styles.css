@@ -175,3 +175,86 @@ body {
 .ctrl-btn:hover { background: #3a3a4d; }
 .ctrl-btn:active { transform: translateY(1px); }
 .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* ===== Daily puzzle banner ===== */
+.puzzle-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--surface);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+.puzzle-goal {
+  font-weight: 600;
+  color: var(--highlight);
+}
+.puzzle-attempts {
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+
+/* ===== Result modal ===== */
+.puzzle-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.puzzle-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+.puzzle-modal-panel {
+  position: relative;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.puzzle-modal-title {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+.puzzle-modal-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.puzzle-modal-emoji {
+  font-size: 1.5rem;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
+}
+.puzzle-modal-streak {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+.puzzle-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ===== Streak display ===== */
+.streak-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+.streak-icon { font-size: 1rem; }
+.streak-value { font-weight: 700; color: var(--highlight); }

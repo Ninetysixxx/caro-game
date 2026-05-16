@@ -1,4 +1,4 @@
-// main.js — bootstrap, event wiring, mode toggle, score tracking (Phase 5)
+// main.js — bootstrap, event wiring, mode toggle, score tracking, daily puzzle
 
 import { createState, makeMove, undoMove, PLAYER_X, PLAYER_O } from './game.js';
 import { getBestMove } from './ai.js';
@@ -7,14 +7,25 @@ import {
   highlightLastMove, clearLastMove, drawWinLine, clearWinLine,
   updateStatus, disableBoard, enableBoard,
 } from './ui.js';
+import { getTodayPuzzle, getTodayPuzzleNumber, applyInitial, checkGoal, aiResponse, gradeMove, formatGoal } from './puzzle-engine.js';
+import { loadStreak, recordResult, hasCompletedToday } from './streak.js';
+import {
+  initDailyBanner, removeDailyBanner, updateAttempts,
+  showResultModal, hideResultModal, updateStreakDisplay, initStreakDisplay
+} from './puzzle-ui.js';
 
 // ── Module-scoped state ───────────────────────────────────────────────────────
 
 let state = createState();
-let mode = 'hotseat'; // 'hotseat' | 'ai'
+let mode = 'hotseat'; // 'hotseat' | 'ai' | 'daily'
 let scores = loadScores();
 let aiThinking = false;
 let aiTimer = null;
+
+// Daily puzzle state
+let dailyPuzzle = null;
+let dailyUserMoveCount = 0;
+let dailyMoveGrades = [];
 
 function cancelAiTurn() {
   if (aiTimer !== null) { clearTimeout(aiTimer); aiTimer = null; }
@@ -26,7 +37,11 @@ function cancelAiTurn() {
 const SCORES_KEY = 'caro-scores-v1';
 
 function defaultScores() {
-  return { hotseat: { x: 0, o: 0, draws: 0 }, ai: { player: 0, ai: 0, draws: 0 } };
+  return {
+    hotseat: { x: 0, o: 0, draws: 0 },
+    ai: { player: 0, ai: 0, draws: 0 },
+    daily: { wins: 0, losses: 0 },
+  };
 }
 
 function loadScores() {
@@ -34,7 +49,7 @@ function loadScores() {
     const raw = localStorage.getItem(SCORES_KEY);
     if (!raw) return defaultScores();
     const parsed = JSON.parse(raw);
-    if (!parsed.hotseat || !parsed.ai) return defaultScores();
+    if (!parsed.hotseat || !parsed.ai || !parsed.daily) return defaultScores();
     return parsed;
   } catch { return defaultScores(); }
 }
@@ -47,15 +62,22 @@ function saveScores() {
 
 function updateScoreDisplay() {
   const isAi = mode === 'ai';
-  document.querySelector('.score-x .score-label').textContent = isAi ? 'Bạn' : 'X';
-  document.querySelector('.score-o .score-label').textContent = isAi ? 'AI' : 'O';
-  document.getElementById('score-x').textContent = isAi ? scores.ai.player : scores.hotseat.x;
-  document.getElementById('score-o').textContent = isAi ? scores.ai.ai : scores.hotseat.o;
-  document.getElementById('score-draws').textContent = isAi ? scores.ai.draws : scores.hotseat.draws;
+  const isDaily = mode === 'daily';
+  document.querySelector('.score-x .score-label').textContent = isAi ? 'Bạn' : isDaily ? 'Thắng' : 'X';
+  document.querySelector('.score-o .score-label').textContent = isAi ? 'AI' : isDaily ? 'Thua' : 'O';
+  document.getElementById('score-x').textContent = isDaily ? scores.daily.wins : isAi ? scores.ai.player : scores.hotseat.x;
+  document.getElementById('score-o').textContent = isDaily ? scores.daily.losses : isAi ? scores.ai.ai : scores.hotseat.o;
+  document.getElementById('score-draws').textContent = isDaily ? '-' : isAi ? scores.ai.draws : scores.hotseat.draws;
 }
 
 function bumpScore(winner) {
-  if (winner === null) {
+  if (mode === 'daily') {
+    if (winner === dailyPuzzle?.player) {
+      scores.daily.wins += 1;
+    } else {
+      scores.daily.losses += 1;
+    }
+  } else if (winner === null) {
     scores[mode === 'hotseat' ? 'hotseat' : 'ai'].draws += 1;
   } else if (mode === 'hotseat') {
     scores.hotseat[winner === PLAYER_X ? 'x' : 'o'] += 1;
@@ -81,6 +103,75 @@ function resetBoard() {
   enableBoard();
   updateStatus('Lượt: X');
   syncUndoBtn();
+}
+
+// ── Daily puzzle ──────────────────────────────────────────────────────────────
+
+function startDailyPuzzle() {
+  dailyPuzzle = getTodayPuzzle();
+  dailyUserMoveCount = 0;
+  dailyMoveGrades = [];
+
+  state = createState();
+  applyInitial(state, dailyPuzzle);
+  renderBoard(state);
+  clearWinLine();
+  clearLastMove();
+  enableBoard();
+
+  const last = state.history[state.history.length - 1];
+  if (last) highlightLastMove(last.row, last.col);
+
+  initDailyBanner(dailyPuzzle);
+  updateAttempts(0, dailyPuzzle.maxMoves);
+  updateStatus(`${formatGoal(dailyPuzzle)} — Lượt: ${dailyPuzzle.player}`);
+  syncUndoBtn();
+}
+
+function endDailyPuzzle(result) {
+  const won = result.status === 'success';
+  if (won && state.winLine) {
+    drawWinLine(state.winLine);
+  }
+  updateStatus(won ? `${dailyPuzzle.player} thắng!` : 'Thua rồi!');
+  disableBoard();
+  bumpScore(won ? dailyPuzzle.player : null);
+
+  const streak = recordResult(dailyPuzzle.id, won, dailyUserMoveCount);
+  updateStreakDisplay(streak.current, streak.max);
+
+  // Pad move grades to maxMoves for display
+  const displayGrades = dailyMoveGrades.slice();
+  while (displayGrades.length < dailyPuzzle.maxMoves) {
+    displayGrades.push('⬛');
+  }
+
+  showResultModal(result, dailyPuzzle, streak, displayGrades, dailyUserMoveCount, getTodayPuzzleNumber());
+}
+
+function triggerDailyAiTurn() {
+  aiThinking = true;
+  disableBoard();
+  updateStatus('AI đang nghĩ...');
+  aiTimer = setTimeout(() => {
+    aiTimer = null;
+    const move = aiResponse(state, dailyPuzzle, null, dailyUserMoveCount - 1);
+    if (!move) { aiThinking = false; enableBoard(); return; }
+    makeMove(state, move.row, move.col);
+    renderBoard(state);
+    highlightLastMove(move.row, move.col);
+
+    const result = checkGoal(state, dailyPuzzle, dailyUserMoveCount, true);
+    if (result.status !== 'in-progress') {
+      endDailyPuzzle(result);
+    } else {
+      enableBoard();
+      updateStatus(`${formatGoal(dailyPuzzle)} — Lượt: ${dailyPuzzle.player}`);
+    }
+
+    aiThinking = false;
+    syncUndoBtn();
+  }, 200);
 }
 
 // ── Post-move logic ───────────────────────────────────────────────────────────
@@ -130,18 +221,43 @@ function onCellClick(row, col) {
   if (!makeMove(state, row, col)) return;
   renderBoard(state);
   highlightLastMove(row, col);
-  handlePostMove(false);
+
+  if (mode === 'daily') {
+    dailyMoveGrades.push(gradeMove({ row, col }, dailyPuzzle, dailyUserMoveCount));
+    dailyUserMoveCount += 1;
+    updateAttempts(dailyUserMoveCount, dailyPuzzle.maxMoves);
+
+    const result = checkGoal(state, dailyPuzzle, dailyUserMoveCount, false);
+    if (result.status === 'success') {
+      endDailyPuzzle(result);
+      syncUndoBtn();
+      return;
+    }
+    if (result.status === 'fail') {
+      endDailyPuzzle(result);
+      syncUndoBtn();
+      return;
+    }
+
+    if (state.status === 'playing' && state.currentPlayer === PLAYER_O) {
+      triggerDailyAiTurn();
+    }
+  } else {
+    handlePostMove(false);
+  }
+
   syncUndoBtn();
 }
 
 function onUndoClick() {
   if (aiThinking || state.history.length === 0) return;
-  if (state.status !== 'playing') return; // No undo after game ends
+  if (state.status !== 'playing') return;
+
   undoMove(state);
   if (mode === 'ai' && state.history.length > 0) undoMove(state);
+
   renderBoard(state);
   clearWinLine();
-  // Re-highlight the new "last move" (if any) so the previous yellow ring clears.
   const last = state.history[state.history.length - 1];
   if (last) highlightLastMove(last.row, last.col);
   else clearLastMove();
@@ -152,7 +268,11 @@ function onUndoClick() {
 
 function onRestartClick() {
   cancelAiTurn();
-  resetBoard();
+  if (mode === 'daily') {
+    startDailyPuzzle();
+  } else {
+    resetBoard();
+  }
 }
 
 function onModeChange(newMode) {
@@ -167,8 +287,22 @@ function onModeChange(newMode) {
     btn.classList.toggle('is-active', active);
     btn.setAttribute('aria-pressed', String(active));
   });
+
+  if (mode !== 'daily') {
+    removeDailyBanner();
+    hideResultModal();
+  }
+
   updateScoreDisplay();
-  resetBoard();
+
+  if (mode === 'daily') {
+    startDailyPuzzle();
+    if (hasCompletedToday()) {
+      updateStatus('Đã hoàn thành hôm nay — chơi lại không tính streak');
+    }
+  } else {
+    resetBoard();
+  }
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
@@ -180,6 +314,10 @@ function bootstrap() {
   updateStatus('Lượt: X');
   updateScoreDisplay();
   syncUndoBtn();
+
+  const streak = loadStreak();
+  initStreakDisplay();
+  updateStreakDisplay(streak.current, streak.max);
 
   document.getElementById('btn-undo').addEventListener('click', onUndoClick);
   document.getElementById('btn-restart').addEventListener('click', onRestartClick);

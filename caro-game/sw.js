@@ -1,4 +1,4 @@
-const VERSION = 'caro-v1';
+const VERSION = 'caro-v2';
 const APP_SHELL = [
   './',
   'index.html',
@@ -8,6 +8,10 @@ const APP_SHELL = [
   'js/game.js',
   'js/ai.js',
   'js/ui.js',
+  'js/puzzle-bank.js',
+  'js/puzzle-engine.js',
+  'js/puzzle-ui.js',
+  'js/streak.js',
   'js/sw-register.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
